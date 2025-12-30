@@ -1,11 +1,15 @@
 # ============================================================================
 # APLICACIÓN SHINY PARA DESCARGA DE DATOS MACROECONÓMICOS
-# Preparación de Dictámenes Económicos - Versión 3.0
+# Preparación de Dictámenes Económicos
 # ============================================================================
 # 
 # FUENTES DE DATOS:
+# - FMI (WEO, BOP, IFS, FSI)
 # - Banco Mundial (World Development Indicators)
-# - FMI (World Economic Outlook) - descarga directa
+# - Organización Mundial del Comercio
+# - Bank for International Settlements
+# - St. Louis Fed (FRED)
+# - Eurostat
 #
 # Fecha: Diciembre 2025
 # ============================================================================
@@ -14,6 +18,7 @@
 # ============================================================================
 paquetes_necesarios <- c(
   "shiny",
+  "shinyjs",
   "bslib",
   "WDI",
   "dplyr",
@@ -25,7 +30,11 @@ paquetes_necesarios <- c(
   "stringr",
   "httr",
   "readxl",
-  "countrycode"
+  "countrycode",
+  "wtor",
+  "fredr",
+  "eurostat",
+  "BIS"
 )
 
 # Instalar paquetes que falten
@@ -37,6 +46,7 @@ if(length(paquetes_faltantes) > 0) {
 # Cargar librerías
 suppressPackageStartupMessages({
   library(shiny)
+  library(shinyjs)
   library(bslib)
   library(WDI)
   library(dplyr)
@@ -49,6 +59,11 @@ suppressPackageStartupMessages({
   library(httr)
   library(readxl)
 })
+
+# Lista de países UE para control de Eurostat
+paises_ue <- c("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
+               "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL",
+               "PL", "PT", "RO", "SK", "SI", "ES", "SE")
 
 # ============================================================================
 # TEMA PERSONALIZADO - COLORES PASTEL
@@ -656,33 +671,456 @@ descargar_datos_fmi <- function(pais_codigo_iso2, fecha_inicio, fecha_fin) {
 # FUNCIÓN COMBINADA
 # ============================================================================
 
+# ============================================================================
+# FUNCIONES ADICIONALES DE DESCARGA
+# ============================================================================
+
+# OMC - Organización Mundial del Comercio
+descargar_datos_omc <- function(pais_codigo_iso2, fecha_inicio, fecha_fin) {
+  tryCatch({
+    if (!requireNamespace("wtor", quietly = TRUE)) {
+      message("Paquete wtor no disponible")
+      return(NULL)
+    }
+    
+    paises <- obtener_lista_paises()
+    match_idx <- which(paises$iso2c == pais_codigo_iso2)
+    
+    if (length(match_idx) == 0) {
+      pais_codigo_iso3 <- mapeo_iso2_iso3[pais_codigo_iso2]
+      if (is.na(pais_codigo_iso3)) return(NULL)
+    } else {
+      pais_codigo_iso3 <- paises$iso3c[match_idx]
+    }
+    
+    # Códigos UE para OMC
+    codigos_ue <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN",
+                    "ESP", "FRA", "DEU", "ITA", "GRC", "HUN", "SWE", "IRL", "LVA",
+                    "LTU", "LUX", "MLT", "NLD", "POL", "PRT", "ROU", "SVK", "SVN")
+    
+    # Mapeo de países a códigos OMC
+    mapeo_omc <- c(
+      "USA" = "840", "JPN" = "392", "CHN" = "156", "BRA" = "076",
+      "MEX" = "484", "ARG" = "032", "CHL" = "152", "COL" = "170",
+      "PER" = "604", "AUS" = "036", "NZL" = "554", "KOR" = "410",
+      "IND" = "356", "IDN" = "360", "THA" = "764", "VNM" = "704",
+      "MYS" = "458", "PHL" = "608", "SGP" = "702", "GBR" = "826",
+      "CHE" = "756", "NOR" = "578", "RUS" = "643", "TUR" = "792",
+      "ZAF" = "710", "EGY" = "818", "NGA" = "566", "SAU" = "682"
+    )
+    
+    codigo_pais <- if (pais_codigo_iso3 %in% codigos_ue) {
+      "918"  # Código UE
+    } else if (pais_codigo_iso3 %in% names(mapeo_omc)) {
+      mapeo_omc[pais_codigo_iso3]
+    } else {
+      message("País no encontrado en mapeo OMC")
+      return(NULL)
+    }
+    
+    datos_lista <- list()
+    
+    tryCatch({
+      datos1 <- wtor::get_timeseries_data(
+        code = "TP_A_0010",
+        reporting_economies = codigo_pais,
+        time_period = "all"
+      )
+      if (!is.null(datos1) && nrow(datos1) > 0) datos_lista$d1 <- datos1
+    }, error = function(e) message("OMC TP_A_0010: ", e$message))
+    
+    tryCatch({
+      datos2 <- wtor::get_timeseries_data(
+        code = "TP_A_0030",
+        reporting_economies = codigo_pais,
+        time_period = "all"
+      )
+      if (!is.null(datos2) && nrow(datos2) > 0) datos_lista$d2 <- datos2
+    }, error = function(e) message("OMC TP_A_0030: ", e$message))
+    
+    if (length(datos_lista) == 0) return(NULL)
+    
+    datos_aranceles <- dplyr::bind_rows(datos_lista)
+    
+    if (!"year" %in% names(datos_aranceles) || !"value" %in% names(datos_aranceles)) {
+      return(NULL)
+    }
+    
+    resultado <- datos_aranceles |>
+      dplyr::mutate(year = as.integer(year)) |>
+      dplyr::filter(year >= lubridate::year(fecha_inicio) &
+                      year <= lubridate::year(fecha_fin))
+    
+    if ("indicatorcode" %in% names(resultado)) {
+      resultado <- resultado |>
+        dplyr::mutate(
+          indicador_nombre = dplyr::case_when(
+            indicatorcode == "TP_A_0010" ~ "Media simple del arancel NMF",
+            indicatorcode == "TP_A_0030" ~ "Media ponderada del arancel NMF",
+            TRUE ~ as.character(indicatorcode)
+          ),
+          indicador_codigo = indicatorcode
+        )
+    } else {
+      resultado <- resultado |>
+        dplyr::mutate(indicador_nombre = "Arancel OMC", indicador_codigo = "OMC_TARIFF")
+    }
+    
+    resultado <- resultado |>
+      dplyr::mutate(
+        country = pais_codigo_iso2,
+        iso2c = pais_codigo_iso2,
+        unidad_corta = "%",
+        unidad_larga = "Porcentaje",
+        fuente = "OMC"
+      ) |>
+      dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
+                    unidad_corta, unidad_larga, valor = value, fuente) |>
+      dplyr::filter(!is.na(valor))
+    
+    return(resultado)
+  }, error = function(e) {
+    message("Error OMC: ", e$message)
+    return(NULL)
+  })
+}
+
+# BIS - Tipo de cambio efectivo real y nominal
+descargar_datos_bis <- function(pais_codigo_iso2, fecha_inicio, fecha_fin) {
+  tryCatch({
+    if (!requireNamespace("BIS", quietly = TRUE)) {
+      message("Paquete BIS no disponible.")
+      return(NULL)
+    }
+    
+    mapeo_bis <- c(
+      "AR" = "AR: Argentina", "AU" = "AU: Australia", "BR" = "BR: Brazil",
+      "CA" = "CA: Canada", "CH" = "CH: Switzerland", "CL" = "CL: Chile",
+      "CN" = "CN: China", "CO" = "CO: Colombia", "CZ" = "CZ: Czech Republic",
+      "DK" = "DK: Denmark", "GB" = "GB: United Kingdom", "HK" = "HK: Hong Kong SAR",
+      "HU" = "HU: Hungary", "ID" = "ID: Indonesia", "IL" = "IL: Israel",
+      "IN" = "IN: India", "IS" = "IS: Iceland", "JP" = "JP: Japan",
+      "KR" = "KR: Korea", "MX" = "MX: Mexico", "MY" = "MY: Malaysia",
+      "NO" = "NO: Norway", "NZ" = "NZ: New Zealand", "PE" = "PE: Peru",
+      "PH" = "PH: Philippines", "PL" = "PL: Poland", "RO" = "RO: Romania",
+      "RU" = "RU: Russia", "SA" = "SA: Saudi Arabia", "SE" = "SE: Sweden",
+      "SG" = "SG: Singapore", "TH" = "TH: Thailand", "TR" = "TR: Turkey",
+      "TW" = "TW: Chinese Taipei", "US" = "US: United States", "ZA" = "ZA: South Africa",
+      "AT" = "XM: Euro area", "BE" = "XM: Euro area", "CY" = "XM: Euro area",
+      "DE" = "XM: Euro area", "EE" = "XM: Euro area", "ES" = "XM: Euro area",
+      "FI" = "XM: Euro area", "FR" = "XM: Euro area", "GR" = "XM: Euro area",
+      "IE" = "XM: Euro area", "IT" = "XM: Euro area", "LT" = "XM: Euro area",
+      "LU" = "XM: Euro area", "LV" = "XM: Euro area", "MT" = "XM: Euro area",
+      "NL" = "XM: Euro area", "PT" = "XM: Euro area", "SI" = "XM: Euro area",
+      "SK" = "XM: Euro area"
+    )
+    
+    area_bis <- mapeo_bis[pais_codigo_iso2]
+    if (is.na(area_bis)) {
+      message("País no disponible en BIS")
+      return(NULL)
+    }
+    
+    ds <- BIS::get_datasets()
+    eer_df <- BIS::get_bis(ds$url[ds$id == "WS_EER_csv_flat"])
+    
+    if (is.null(eer_df) || nrow(eer_df) == 0) {
+      message("No se pudieron descargar datos de BIS")
+      return(NULL)
+    }
+    
+    datos_lista <- list()
+    
+    reer_data <- eer_df |>
+      dplyr::filter(
+        ref_area == area_bis,
+        stringr::str_sub(eer_basket, 1, 1) == "B",
+        stringr::str_sub(eer_type, 1, 1) == "R",
+        !is.na(time_period)
+      ) |>
+      dplyr::mutate(
+        year = as.integer(stringr::str_sub(time_period, 1, 4)),
+        valor = as.numeric(obs_value)
+      ) |>
+      dplyr::filter(year >= lubridate::year(fecha_inicio) &
+                      year <= lubridate::year(fecha_fin)) |>
+      dplyr::group_by(year) |>
+      dplyr::summarise(valor = mean(valor, na.rm = TRUE), .groups = "drop") |>
+      dplyr::mutate(
+        country = pais_codigo_iso2,
+        iso2c = pais_codigo_iso2,
+        indicador_codigo = "REER_BIS_BROAD",
+        indicador_nombre = "Tipo de cambio efectivo real (Broad)",
+        unidad_corta = "índice",
+        unidad_larga = "Índice (media 2020=100)",
+        fuente = "BIS"
+      )
+    
+    if (nrow(reer_data) > 0) {
+      datos_lista[["reer"]] <- reer_data
+    }
+    
+    neer_data <- eer_df |>
+      dplyr::filter(
+        ref_area == area_bis,
+        stringr::str_sub(eer_basket, 1, 1) == "B",
+        stringr::str_sub(eer_type, 1, 1) == "N",
+        freq == "M: Monthly"
+      ) |>
+      dplyr::mutate(
+        time_period = as.Date(time_period),
+        year = lubridate::year(time_period),
+        valor = as.numeric(obs_value)
+      ) |>
+      dplyr::filter(year >= lubridate::year(fecha_inicio) &
+                      year <= lubridate::year(fecha_fin)) |>
+      dplyr::group_by(year) |>
+      dplyr::summarise(valor = mean(valor, na.rm = TRUE), .groups = "drop") |>
+      dplyr::mutate(
+        country = pais_codigo_iso2,
+        iso2c = pais_codigo_iso2,
+        indicador_codigo = "NEER_BIS_BROAD",
+        indicador_nombre = "Tipo de cambio efectivo nominal (Broad)",
+        unidad_corta = "índice",
+        unidad_larga = "Índice (media 2020=100)",
+        fuente = "BIS"
+      )
+    
+    if (nrow(neer_data) > 0) {
+      datos_lista[["neer"]] <- neer_data
+    }
+    
+    if (length(datos_lista) == 0) {
+      return(NULL)
+    }
+    
+    resultado <- dplyr::bind_rows(datos_lista) |>
+      dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
+                    unidad_corta, unidad_larga, valor, fuente) |>
+      dplyr::filter(!is.na(valor))
+    
+    return(resultado)
+  }, error = function(e) {
+    message("Error descargando datos de BIS: ", e$message)
+    return(NULL)
+  })
+}
+
+# FRED - Reserva Federal de San Luis
+descargar_datos_fred <- function(fecha_inicio, fecha_fin) {
+  tryCatch({
+    if (!requireNamespace("fredr", quietly = TRUE)) {
+      message("Paquete fredr no disponible")
+      return(NULL)
+    }
+    
+    api_key <- tryCatch(fredr::fredr_get_key(), error = function(e) NULL)
+    if (is.null(api_key) || api_key == "") {
+      message("API key de FRED no configurada. Omitiendo FRED.")
+      return(NULL)
+    }
+    
+    series_fred <- list(
+      "DEXUSEU" = c("Tipo de cambio USD/EUR", "USD/EUR", "Dólares por euro"),
+      "DFF" = c("Tasa fondos federales", "%", "Porcentaje anual"),
+      "UNRATE" = c("Tasa desempleo EE.UU.", "%", "Porcentaje"),
+      "CPIAUCSL" = c("IPC EE.UU.", "índice", "1982-84=100")
+    )
+    
+    datos_lista <- list()
+    
+    for (serie_id in names(series_fred)) {
+      tryCatch({
+        datos_serie <- fredr::fredr(
+          series_id = serie_id,
+          observation_start = fecha_inicio,
+          observation_end = fecha_fin
+        )
+        
+        if (!is.null(datos_serie) && nrow(datos_serie) > 0) {
+          datos_serie <- datos_serie |>
+            dplyr::mutate(year = as.integer(lubridate::year(date))) |>
+            dplyr::group_by(year) |>
+            dplyr::summarise(valor = mean(value, na.rm = TRUE), .groups = "drop") |>
+            dplyr::mutate(
+              country = "US", iso2c = "US",
+              indicador_codigo = serie_id,
+              indicador_nombre = series_fred[[serie_id]][1],
+              unidad_corta = series_fred[[serie_id]][2],
+              unidad_larga = series_fred[[serie_id]][3],
+              fuente = "FRED"
+            )
+          datos_lista[[serie_id]] <- datos_serie
+        }
+      }, error = function(e) message("FRED ", serie_id, ": ", e$message))
+    }
+    
+    if (length(datos_lista) == 0) return(NULL)
+    
+    dplyr::bind_rows(datos_lista) |>
+      dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
+                    unidad_corta, unidad_larga, valor, fuente) |>
+      dplyr::filter(!is.na(valor))
+  }, error = function(e) {
+    message("Error FRED: ", e$message)
+    return(NULL)
+  })
+}
+
+# Eurostat - Solo países UE
+descargar_datos_eurostat <- function(pais_codigo_iso2, fecha_inicio, fecha_fin) {
+  tryCatch({
+    if (!requireNamespace("eurostat", quietly = TRUE)) {
+      message("Paquete eurostat no disponible")
+      return(NULL)
+    }
+    
+    if (!(pais_codigo_iso2 %in% paises_ue)) {
+      message("País no es miembro de la UE")
+      return(NULL)
+    }
+    
+    datos_lista <- list()
+    
+    tryCatch({
+      datos_gdp <- eurostat::get_eurostat(
+        "nama_10_gdp", time_format = "num",
+        filters = list(geo = pais_codigo_iso2)
+      )
+      if (!is.null(datos_gdp) && nrow(datos_gdp) > 0) {
+        datos_gdp$indicador <- "PIB (Eurostat)"
+        datos_lista$gdp <- datos_gdp
+      }
+    }, error = function(e) message("Eurostat PIB: ", e$message))
+    
+    tryCatch({
+      datos_emp <- eurostat::get_eurostat(
+        "une_rt_a", time_format = "num",
+        filters = list(geo = pais_codigo_iso2)
+      )
+      if (!is.null(datos_emp) && nrow(datos_emp) > 0) {
+        datos_emp$indicador <- "Desempleo (Eurostat)"
+        datos_lista$emp <- datos_emp
+      }
+    }, error = function(e) message("Eurostat empleo: ", e$message))
+    
+    if (length(datos_lista) == 0) return(NULL)
+    
+    dplyr::bind_rows(datos_lista) |>
+      dplyr::filter(time >= lubridate::year(fecha_inicio) &
+                      time <= lubridate::year(fecha_fin)) |>
+      dplyr::mutate(
+        country = pais_codigo_iso2,
+        year = as.integer(time),
+        iso2c = pais_codigo_iso2,
+        indicador_codigo = indicador,
+        indicador_nombre = indicador,
+        unidad_corta = "",
+        unidad_larga = "",
+        fuente = "Eurostat"
+      ) |>
+      dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
+                    unidad_corta, unidad_larga, valor = values, fuente) |>
+      dplyr::filter(!is.na(valor))
+  }, error = function(e) {
+    message("Error Eurostat: ", e$message)
+    return(NULL)
+  })
+}
+
+# ============================================================================
+# FUNCIÓN COMBINADA DE DESCARGA
+# ============================================================================
+
 descargar_datos_combinados <- function(pais_codigo, fecha_inicio, fecha_fin, 
-                                       usar_bm = TRUE, usar_fmi = TRUE) {
+                                       usar_bm = TRUE,
+                                       usar_fmi = TRUE,
+                                       usar_omc = TRUE,
+                                       usar_bis = TRUE,
+                                       usar_fred = TRUE,
+                                       usar_eurostat = TRUE) {
   datos_lista <- list()
+  resumen_fuentes <- list()
   
   if (usar_bm) {
     message("Descargando datos del Banco Mundial...")
-    datos_bm <- descargar_datos_bm(pais_codigo, fecha_inicio, fecha_fin)
+    datos_bm <- tryCatch(
+      descargar_datos_bm(pais_codigo, fecha_inicio, fecha_fin),
+      error = function(e) { message("Error BM: ", e$message); NULL }
+    )
     if (!is.null(datos_bm) && nrow(datos_bm) > 0) {
       datos_lista$bm <- datos_bm
+      resumen_fuentes$`Banco Mundial` <- nrow(datos_bm)
       message(paste0("✓ Banco Mundial: ", nrow(datos_bm), " registros"))
     }
   }
   
   if (usar_fmi) {
     message("Descargando datos del FMI...")
-    datos_fmi <- descargar_datos_fmi(pais_codigo, fecha_inicio, fecha_fin)
+    datos_fmi <- tryCatch(
+      descargar_datos_fmi(pais_codigo, fecha_inicio, fecha_fin),
+      error = function(e) { message("Error FMI: ", e$message); NULL }
+    )
     if (!is.null(datos_fmi) && nrow(datos_fmi) > 0) {
       datos_lista$fmi <- datos_fmi
+      resumen_fuentes$FMI <- nrow(datos_fmi)
       message(paste0("✓ FMI: ", nrow(datos_fmi), " registros"))
     }
   }
   
-  if (length(datos_lista) == 0) {
-    return(NULL)
+  if (usar_omc) {
+    message("Descargando datos de la OMC...")
+    datos_omc <- tryCatch(
+      descargar_datos_omc(pais_codigo, fecha_inicio, fecha_fin),
+      error = function(e) { message("Error OMC: ", e$message); NULL }
+    )
+    if (!is.null(datos_omc) && nrow(datos_omc) > 0) {
+      datos_lista$omc <- datos_omc
+      resumen_fuentes$OMC <- nrow(datos_omc)
+      message(paste0("✓ OMC: ", nrow(datos_omc), " registros"))
+    }
   }
   
-  return(dplyr::bind_rows(datos_lista))
+  if (usar_fred) {
+    message("Descargando datos de FRED...")
+    datos_fred <- tryCatch(
+      descargar_datos_fred(fecha_inicio, fecha_fin),
+      error = function(e) { message("Error FRED: ", e$message); NULL }
+    )
+    if (!is.null(datos_fred) && nrow(datos_fred) > 0) {
+      datos_lista$fred <- datos_fred
+      resumen_fuentes$FRED <- nrow(datos_fred)
+      message(paste0("✓ FRED: ", nrow(datos_fred), " registros"))
+    }
+  }
+  
+  if (usar_eurostat && pais_codigo %in% paises_ue) {
+    message("Descargando datos de Eurostat...")
+    datos_eurostat <- tryCatch(
+      descargar_datos_eurostat(pais_codigo, fecha_inicio, fecha_fin),
+      error = function(e) { message("Error Eurostat: ", e$message); NULL }
+    )
+    if (!is.null(datos_eurostat) && nrow(datos_eurostat) > 0) {
+      datos_lista$eurostat <- datos_eurostat
+      resumen_fuentes$Eurostat <- nrow(datos_eurostat)
+      message(paste0("✓ Eurostat: ", nrow(datos_eurostat), " registros"))
+    }
+  }
+  
+  if (length(datos_lista) == 0) {
+    return(list(datos = NULL, resumen = resumen_fuentes))
+  }
+  
+  # Asegurar consistencia de tipos
+  datos_lista <- lapply(datos_lista, function(df) {
+    if ("year" %in% names(df)) df$year <- as.integer(df$year)
+    return(df)
+  })
+  
+  return(list(
+    datos = dplyr::bind_rows(datos_lista),
+    resumen = resumen_fuentes
+  ))
 }
 
 # ============================================================================
@@ -1094,7 +1532,7 @@ exportar_a_excel <- function(datos_por_categoria, datos_completos, pais_nombre,
 ui <- page_navbar(
   title = span(
     icon("chart-line"), " ",
-    "Análisis macroeconómico"
+    "Dictamen de coyuntura"
   ),
   theme = tema_pastel,
   fillable = FALSE,
@@ -1103,6 +1541,8 @@ ui <- page_navbar(
   nav_panel(
     title = "Descarga de datos",
     icon = icon("download"),
+    
+    shinyjs::useShinyjs(),
     
     div(
       class = "container-fluid py-3",
@@ -1114,7 +1554,7 @@ ui <- page_navbar(
           col_widths = c(9, 3),
           div(
             h2(icon("globe"), " Sistema de descarga de indicadores"),
-            p("Descargue datos macroeconómicos del Banco Mundial y el FMI para preparar dictámenes económicos.")
+            p("Descargue datos macroeconómicos de múltiples fuentes internacionales para preparar dictámenes económicos.")
           ),
           div(
             class = "text-center",
@@ -1167,17 +1607,27 @@ ui <- page_navbar(
                 class = "form-label",
                 icon("database"), " Fuentes de datos:"
               ),
+              div(
+                class = "d-flex gap-2 mb-2",
+                actionButton("btn_seleccionar_todas", "Todas", class = "btn-sm btn-secondary"),
+                actionButton("btn_deseleccionar_todas", "Ninguna", class = "btn-sm btn-secondary")
+              ),
               checkboxGroupInput(
                 "fuentes_datos",
                 label = NULL,
                 choices = c(
                   "Banco Mundial (WDI)" = "bm",
-                  "FMI (World Economic Outlook)" = "fmi"
+                  "FMI (World Economic Outlook)" = "fmi",
+                  "OMC (Aranceles)" = "omc",
+                  "BIS" = "bis",
+                  "FRED" = "fred",
+                  "Eurostat (UE)" = "eurostat"
                 ),
-                selected = c("bm", "fmi"),
-                inline = TRUE,
+                selected = c("bm", "fmi", "omc", "bis", "fred", "eurostat"),
+                inline = FALSE,
                 width = "100%"
-              )
+              ),
+              uiOutput("alerta_eurostat")
             )
           ),
           
@@ -1523,6 +1973,8 @@ server <- function(input, output, session) {
   pais_seleccionado <- reactiveVal("")
   descarga_en_curso <- reactiveVal(FALSE)
   bandera_actual <- reactiveVal("")
+  es_pais_ue <- reactiveVal(TRUE)
+  resumen_fuentes <- reactiveVal(NULL)
   
   # Cargar lista de países al iniciar
   observe({
@@ -1542,6 +1994,46 @@ server <- function(input, output, session) {
     req(input$pais)
     iso2 <- input$pais
     bandera_actual(paste0("https://flagcdn.com/w160/", tolower(iso2), ".png"))
+    
+    # Verificar si el país es de la UE para Eurostat
+    pais_en_ue <- iso2 %in% paises_ue
+    es_pais_ue(pais_en_ue)
+    
+    if (!pais_en_ue) {
+      # Desmarcar y deshabilitar Eurostat
+      fuentes_actuales <- input$fuentes_datos
+      fuentes_sin_eurostat <- setdiff(fuentes_actuales, "eurostat")
+      updateCheckboxGroupInput(session, "fuentes_datos", selected = fuentes_sin_eurostat)
+      shinyjs::disable(selector = "input[value='eurostat']")
+    } else {
+      shinyjs::enable(selector = "input[value='eurostat']")
+    }
+  })
+  
+  # Alerta de Eurostat
+  output$alerta_eurostat <- renderUI({
+    if (!es_pais_ue()) {
+      div(
+        class = "alert alert-warning mt-2 py-1",
+        style = "font-size: 0.85rem;",
+        icon("info-circle"), " Eurostat solo disponible para países de la UE"
+      )
+    }
+  })
+  
+  # Botones seleccionar/deseleccionar todas
+  observeEvent(input$btn_seleccionar_todas, {
+    if (es_pais_ue()) {
+      updateCheckboxGroupInput(session, "fuentes_datos",
+                               selected = c("bm", "fmi", "omc", "bis", "fred", "eurostat"))
+    } else {
+      updateCheckboxGroupInput(session, "fuentes_datos",
+                               selected = c("bm", "fmi", "omc", "bis", "fred"))
+    }
+  })
+  
+  observeEvent(input$btn_deseleccionar_todas, {
+    updateCheckboxGroupInput(session, "fuentes_datos", selected = character(0))
   })
   
   # Renderizar la bandera
@@ -1587,20 +2079,27 @@ server <- function(input, output, session) {
       
       usar_bm <- "bm" %in% input$fuentes_datos
       usar_fmi <- "fmi" %in% input$fuentes_datos
+      usar_omc <- "omc" %in% input$fuentes_datos
+      usar_fred <- "fred" %in% input$fuentes_datos
+      usar_eurostat <- "eurostat" %in% input$fuentes_datos && es_pais_ue()
       
       incProgress(0.2, detail = "Descargando indicadores...")
       
-      datos <- descargar_datos_combinados(
+      resultado <- descargar_datos_combinados(
         input$pais, 
         as.Date(paste0(input$fecha_inicio, "-01-01")),
         as.Date(paste0(input$fecha_fin, "-12-31")),
         usar_bm = usar_bm,
-        usar_fmi = usar_fmi
+        usar_fmi = usar_fmi,
+        usar_omc = usar_omc,
+        usar_bis = usar_bis,
+        usar_fred = usar_fred,
+        usar_eurostat = usar_eurostat
       )
       
       incProgress(0.6, detail = "Procesando datos...")
       
-      if (is.null(datos) || nrow(datos) == 0) {
+      if (is.null(resultado$datos) || nrow(resultado$datos) == 0) {
         showNotification(
           "No se pudieron descargar datos. Verifique su conexión a Internet e intente de nuevo.",
           type = "error",
@@ -1609,11 +2108,12 @@ server <- function(input, output, session) {
         return()
       }
       
-      datos_descargados(datos)
+      datos_descargados(resultado$datos)
+      resumen_fuentes(resultado$resumen)
       
       incProgress(0.8, detail = "Organizando por categorías...")
       
-      datos_cat <- organizar_por_categoria(datos, input$fecha_inicio, input$fecha_fin)
+      datos_cat <- organizar_por_categoria(resultado$datos, input$fecha_inicio, input$fecha_fin)
       datos_por_categoria(datos_cat)
       
       incProgress(1, detail = "¡Completado!")
