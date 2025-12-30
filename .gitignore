@@ -2,3 +2,14 @@
 .Rhistory
 .RData
 .Ruserdata
+*.html
+# R Environment Variables
+.Renviron
+# knitr and R markdown default cache directories
+*_cache/
+/cache/
+# knitr and R markdown default cache directories
+*_output/
+/output/
+.xlsx
+.docx
