@@ -55,6 +55,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     "tidyr",
     "purrr",
     "officer",
+    "flextable",
     "openxlsx",
     "DT",
     "lubridate",
@@ -86,6 +87,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     library(dplyr)
     library(tidyr)
     library(officer)
+    library(flextable)
     library(openxlsx)
     library(DT)
     library(lubridate)
@@ -2824,30 +2826,100 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   }
   
   # ============================================================================
-  # EXPORTAR A WORD CON SUBDIVISIONES
+  # EXPORTAR A WORD
   # ============================================================================
-  
-  exportar_a_word <- function(datos_por_categoria, pais_nombre, fecha_inicio, fecha_fin, archivo_salida) {
+
+  exportar_a_word <- function(datos_por_categoria, pais_nombre, fecha_inicio, fecha_fin, 
+                              archivo_salida, plantilla_word = NULL) {
     
-    doc <- officer::read_docx()
-    doc <- doc |> officer::body_set_default_section(
-      officer::prop_section(
-        page_size = officer::page_size(orient = "landscape"),
-        page_margins = officer::page_mar(bottom = 0.5, top = 0.5, right = 0.5, left = 0.5,
-                                         header = 0.3, footer = 0.3, gutter = 0)
+    # Colores definidos
+    COLOR_MORADO <- "#5F2987"
+    COLOR_VERDE_LINEA <- "#E2EFD9"  # Verde clarito para líneas divisorias
+    COLOR_BLANCO <- "#FFFFFF"
+    
+    
+    # Crear documento base (con o sin plantilla)
+    if (!is.null(plantilla_word) && file.exists(plantilla_word)) {
+      doc <- officer::read_docx(plantilla_word)
+      message("Usando plantilla: ", plantilla_word)
+      
+      # Posicionarse en la 4ª página (después de las 3 primeras hojas de la plantilla)
+      # Buscamos el bookmark "INICIO_DATOS" si existe, si no, vamos al final de la página 3
+      tryCatch({
+        doc <- officer::cursor_bookmark(doc, "INICIO_DATOS")
+        message("Usando bookmark 'INICIO_DATOS' para insertar datos")
+      }, error = function(e) {
+        # Si no hay bookmark, ir al final del documento
+        doc <<- officer::cursor_end(doc)
+        message("No se encontró bookmark 'INICIO_DATOS', insertando al final")
+      })
+      
+    } else {
+      doc <- officer::read_docx()
+      # Configurar página horizontal solo si no hay plantilla
+      doc <- doc |> officer::body_set_default_section(
+        officer::prop_section(
+          page_size = officer::page_size(orient = "landscape"),
+          page_margins = officer::page_mar(bottom = 0.5, top = 0.5, right = 0.5, left = 0.5,
+                                           header = 0.3, footer = 0.3, gutter = 0)
+        )
       )
+    }
+    
+    # Definir propiedades de párrafo con keep_with_next para evitar saltos de página
+    fp_par_keep <- officer::fp_par(
+      keep_with_next = TRUE
     )
     
+    # Definir propiedades de texto para títulos
+    fp_titulo_principal <- officer::fp_text(
+      font.size = 16,
+      bold = TRUE,
+      color = COLOR_MORADO,
+      font.family = "Aptos"
+    )
+    
+    fp_titulo_seccion <- officer::fp_text(
+      font.size = 14,
+      bold = TRUE,
+      color = COLOR_MORADO,
+      font.family = "Aptos"
+    )
+    
+    fp_subtitulo <- officer::fp_text(
+      font.size = 11,
+      bold = TRUE,
+      color = COLOR_MORADO,
+      font.family = "Aptos"
+    )
+    
+    fp_normal <- officer::fp_text(
+      font.size = 10,
+      color = "#333333",
+      font.family = "Aptos"
+    )
+    
+    # Añadir título principal (con keep_with_next)
     doc <- doc |>
-      officer::body_add_par(
-        paste0("INDICADORES ECONÓMICOS – ", toupper(pais_nombre)),
-        style = "heading 1"
+      officer::body_add_fpar(
+        officer::fpar(
+          officer::ftext(
+            paste0("DICTAMEN ECONÓMICO SOBRE ", toupper(pais_nombre)),
+            prop = fp_titulo_principal
+          ),
+          fp_p = fp_par_keep
+        )
       ) |>
-      officer::body_add_par(
-        paste0("Período: ", lubridate::year(fecha_inicio), "–", lubridate::year(fecha_fin)),
-        style = "Normal"
+      officer::body_add_par("") |>
+      officer::body_add_fpar(
+        officer::fpar(
+          officer::ftext(
+            paste0("Período: ", lubridate::year(fecha_inicio), "–", lubridate::year(fecha_fin)),
+            prop = fp_normal
+          )
+        )
       ) |>
-      officer::body_add_par("", style = "Normal")
+      officer::body_add_par("")
     
     # Definir estructura de categorías y subcategorías según dictamen de Narnia
     estructura_categorias <- list(
@@ -2855,13 +2927,18 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         nombre = "Sector real",
         subcategorias = list(
           list(
-            nombre = "Producción y demanda",
+            nombre = "Producción y demanda (variación porcentual interanual, salvo indicación)",
             patrones = c("PIB", "Consumo", "Formación bruta", "Inversión", "Demanda",
-                         "Exportaciones", "Importaciones", "Ahorro")
+                         "Exportaciones netas", "Ahorro")
           ),
           list(
-            nombre = "Oferta",
-            patrones = c("Agricultura", "Industria", "Servicios", "VAB", "valor añadido")
+            nombre = "Oferta (% del PIB)",
+            patrones = c("Agricultura", "Industria", "Servicios", "VAB", "valor añadido",
+                         "Manufacturas", "Construcción")
+          ),
+          list(
+            nombre = "Output potencial",
+            patrones = c("Output gap", "PIB potencial", "producto potencial")
           )
         )
       ),
@@ -2870,11 +2947,13 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         subcategorias = list(
           list(
             nombre = "Indicadores principales",
-            patrones = c("desempleo", "Desempleo", "empleo", "Empleo", "actividad", "Población activa", "Ratio empleo")
+            patrones = c("desempleo", "Desempleo", "empleo", "Empleo", "actividad", 
+                         "Población activa", "Ratio empleo", "participación", "Fuerza laboral")
           ),
           list(
-            nombre = "Costes laborales y productividad",
-            patrones = c("CLU", "Productividad", "productividad", "Coste", "salario")
+            nombre = "Costes laborales (% del PIB)",
+            patrones = c("Remuneración", "gastos de personal", "CLU", "Productividad", 
+                         "productividad", "Coste", "salario")
           )
         )
       ),
@@ -2886,16 +2965,23 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
             patrones = c("arancel", "Arancel", "NMF")
           ),
           list(
-            nombre = "Balanza de pagos y posición exterior",
-            patrones = c("Cuenta corriente", "Inversión extranjera", "Deuda externa", "Reservas")
+            nombre = "Balanza de Pagos (miles de millones de euros)",
+            patrones = c("Cuenta corriente", "Balanza de bienes", "Exportaciones de bienes",
+                         "Importaciones de bienes", "Balanza de rentas", "Cuenta de capital",
+                         "Cuenta financiera", "Inversión directa", "Inversión de cartera",
+                         "Derivados", "Otra inversión", "Activos de reserva", "Errores")
           ),
           list(
-            nombre = "Competitividad y tipo de cambio",
-            patrones = c("cambio", "Cambio", "REER", "NEER", "efectivo")
+            nombre = "Balanza de Pagos (% del PIB)",
+            patrones = c("% del PIB", "% PIB")
           ),
           list(
-            nombre = "Comercio exterior",
-            patrones = c("Exportaciones", "Importaciones", "Volumen")
+            nombre = "Posición Internacional y Deuda (% del PIB)",
+            patrones = c("Posición de inversión", "Deuda externa", "PIIN", "PII neta")
+          ),
+          list(
+            nombre = "Ahorro e inversión",
+            patrones = c("Ahorro nacional", "Inversión doméstica")
           )
         )
       ),
@@ -2903,33 +2989,32 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         nombre = "Sector público",
         subcategorias = list(
           list(
-            nombre = "Ingresos y gastos",
-            patrones = c("Ingresos", "Gasto", "Recaudación")
+            nombre = "Ingresos y gastos (% del PIB)",
+            patrones = c("Ingresos totales", "Impuestos", "Contribuciones sociales",
+                         "Subvenciones", "Otros ingresos", "Gastos totales", "Remuneración",
+                         "Uso de bienes", "Consumo de capital", "Intereses", "Subsidios",
+                         "Beneficios sociales", "Otros gastos")
           ),
           list(
-            nombre = "Déficit y deuda",
-            patrones = c("Deuda", "Saldo", "Déficit", "primario")
+            nombre = "Balances y Deuda (% del PIB)",
+            patrones = c("Balance fiscal", "Balance primario", "Balance estructural",
+                         "Saldo público", "Saldo fiscal", "Saldo primario", "Saldo estructural",
+                         "Deuda pública", "Déficit")
           )
         )
       ),
       precios_monetarios = list(
-        nombre = "Precios e indicadores monetarios y financieros",
+        nombre = "Precios y costes",
         subcategorias = list(
           list(
-            nombre = "Inflación y precios",
-            patrones = c("Inflación", "IPC", "HICP", "Deflactor", "subyacente", "precios")
+            nombre = "Precios y costes",
+            patrones = c("IPC", "HICP", "Inflación", "Deflactor", "precios")
           ),
           list(
-            nombre = "Tipos de interés",
-            patrones = c("interés", "interbancario", "política monetaria", "depósito", "préstamo")
-          ),
-          list(
-            nombre = "Agregados monetarios y crédito",
-            patrones = c("monetaria", "Crédito", "M1", "M2", "M3", "base monetaria")
-          ),
-          list(
-            nombre = "Sector bancario",
-            patrones = c("ROE", "ROA", "morosidad", "capital", "solvencia", "NPL", "bancario")
+            nombre = "Indicadores monetarios y financieros",
+            patrones = c("Crédito", "capital regulatorio", "préstamos morosos", 
+                         "liquidez", "Tier", "ROA", "ROE", "Retorno", "Depósitos",
+                         "bancario", "interés", "monetaria")
           )
         )
       ),
@@ -2938,14 +3023,17 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         subcategorias = list(
           list(
             nombre = "Indicadores demográficos y sociales",
-            patrones = c("Población", "urbana", "Esperanza", "Gini", "INB", "per cápita", "PPA")
+            patrones = c("Población", "urbana", "Esperanza", "Gini", "INB", 
+                         "per cápita", "PPA", "internet")
           )
         )
       )
     )
     
-    # Función auxiliar para crear tabla
-    crear_tabla_word <- function(datos_tabla) {
+    # Función para crear tabla con flextable
+    crear_flextable <- function(datos_tabla, es_primera_tabla = FALSE) {
+      
+      # Eliminar columnas no deseadas
       if ("unidad_larga" %in% names(datos_tabla)) {
         datos_tabla <- datos_tabla |> dplyr::select(-unidad_larga)
       }
@@ -2954,28 +3042,104 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       }
       
       cols_nombres <- names(datos_tabla)
+      n_cols <- ncol(datos_tabla)
       
+      # Formatear números en español
       for (col in cols_nombres) {
         if (is.numeric(datos_tabla[[col]])) {
           datos_tabla[[col]] <- sapply(datos_tabla[[col]], function(x) {
-            formatear_numero_es(x, 2)
+            formatear_numero_es(x, 1)
           })
         } else {
-          datos_tabla[[col]] <- ifelse(is.na(datos_tabla[[col]]) | datos_tabla[[col]] == "", " ", as.character(datos_tabla[[col]]))
+          datos_tabla[[col]] <- ifelse(is.na(datos_tabla[[col]]) | datos_tabla[[col]] == "", 
+                                       " ", as.character(datos_tabla[[col]]))
         }
       }
       
+      # Formatear unidad corta entre paréntesis si no está vacía
       if ("unidad_corta" %in% cols_nombres) {
-        datos_tabla$unidad_corta <- ifelse(datos_tabla$unidad_corta != " " & datos_tabla$unidad_corta != "",
-                                           paste0("(", datos_tabla$unidad_corta, ")"), " ")
+        datos_tabla$unidad_corta <- ifelse(
+          datos_tabla$unidad_corta != " " & datos_tabla$unidad_corta != "",
+          paste0("(", datos_tabla$unidad_corta, ")"), 
+          " "
+        )
       }
       
+      # Renombrar columnas
       nombres_cols_tabla <- cols_nombres
       nombres_cols_tabla[nombres_cols_tabla == "indicador_nombre"] <- "Indicador"
       nombres_cols_tabla[nombres_cols_tabla == "unidad_corta"] <- " "
       names(datos_tabla) <- nombres_cols_tabla
       
-      return(datos_tabla)
+      # Crear flextable
+      ft <- flextable::flextable(datos_tabla)
+      
+      # Aplicar fuente Aptos a toda la tabla
+      ft <- ft |>
+        flextable::font(fontname = "Aptos", part = "all") |>
+        flextable::fontsize(size = 9, part = "body") |>
+        flextable::fontsize(size = 10, part = "header")
+      
+      # Estilo del encabezado (morado con texto blanco)
+      ft <- ft |>
+        flextable::bg(bg = COLOR_MORADO, part = "header") |>
+        flextable::color(color = COLOR_BLANCO, part = "header") |>
+        flextable::bold(part = "header")
+      
+      # Alineación: primera columna a la izquierda
+      ft <- ft |>
+        flextable::align(j = 1, align = "left", part = "all")
+      
+      # Resto de columnas alineadas (solo si hay más de 1 columna)
+      if (n_cols > 1) {
+        ft <- ft |>
+          flextable::align(j = 2:n_cols, align = "right", part = "body") |>
+          flextable::align(j = 2:n_cols, align = "center", part = "header")
+      }
+      
+      # Bordes: líneas horizontales verdes finas entre filas
+      borde_verde <- officer::fp_border(color = COLOR_VERDE_LINEA, width = 0.75)
+      borde_morado <- officer::fp_border(color = COLOR_MORADO, width = 1.5)
+      
+      ft <- ft |>
+        flextable::border_remove() |>
+        # Línea inferior del encabezado (morado, más grueso)
+        flextable::hline(part = "header", border = borde_morado) |>
+        # Líneas horizontales verdes entre todas las filas del cuerpo
+        flextable::hline(part = "body", border = borde_verde) |>
+        # Línea inferior de la tabla
+        flextable::hline_bottom(part = "body", border = borde_verde)
+      
+      # Ajustar anchos de columna
+      # Columna Indicador: 7cm (aproximadamente 2.76 pulgadas)
+      # En landscape A4: ancho útil ≈ 27cm (29.7 - 2.7 de márgenes)
+      # Resto: (27 - 7) / (n_cols - 1) cm por columna
+      
+      ancho_indicador <- 2.76  # 7cm en pulgadas
+      
+      ft <- ft |>
+        flextable::width(j = 1, width = ancho_indicador)
+      
+      # Calcular ancho para el resto de columnas
+      if (n_cols > 1) {
+        # Ancho total disponible aproximado en pulgadas (landscape A4 con márgenes de 0.5")
+        ancho_total <- 10.5  # pulgadas aproximadamente
+        ancho_restante <- ancho_total - ancho_indicador
+        ancho_por_columna <- ancho_restante / (n_cols - 1)
+        
+        ft <- ft |>
+          flextable::width(j = 2:n_cols, width = ancho_por_columna)
+      }
+      
+      # Padding
+      ft <- ft |>
+        flextable::padding(padding = 3, part = "all")
+      
+      # Mantener encabezado con el contenido (evitar que quede solo en página)
+      ft <- ft |>
+        flextable::paginate(init = TRUE, hdr_ftr = TRUE)
+      
+      return(ft)
     }
     
     # Función para filtrar indicadores por patrones
@@ -3003,13 +3167,19 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       
       if (is.null(datos_cat) || nrow(datos_cat) == 0) next
       
-      # Añadir título de categoría (heading 2)
+      # Añadir título de categoría con formato morado (con keep_with_next)
       doc <- doc |>
-        officer::body_add_par(estructura$nombre, style = "heading 2")
+        officer::body_add_fpar(
+          officer::fpar(
+            officer::ftext(estructura$nombre, prop = fp_titulo_seccion),
+            fp_p = fp_par_keep
+          )
+        )
       
       # Si hay subcategorías definidas, dividir los datos
       if (length(estructura$subcategorias) > 0) {
         indicadores_usados <- c()
+        es_primera_tabla <- TRUE
         
         for (subcat in estructura$subcategorias) {
           datos_subcat <- filtrar_por_patrones(datos_cat, subcat$patrones)
@@ -3022,20 +3192,22 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
             if (nrow(datos_subcat) > 0) {
               indicadores_usados <- c(indicadores_usados, unique(datos_subcat$indicador_nombre))
               
-              datos_tabla <- crear_tabla_word(as.data.frame(datos_subcat))
-              
-              # Añadir subtítulo (texto en negrita)
+              # Añadir subtítulo con formato morado (con keep_with_next)
               doc <- doc |>
-                officer::body_add_par(subcat$nombre, style = "heading 3")
+                officer::body_add_fpar(
+                  officer::fpar(
+                    officer::ftext(subcat$nombre, prop = fp_subtitulo),
+                    fp_p = fp_par_keep
+                  )
+                )
               
+              # Crear y añadir tabla con flextable
+              ft <- crear_flextable(as.data.frame(datos_subcat), es_primera_tabla)
               doc <- doc |>
-                officer::body_add_table(
-                  value = datos_tabla,
-                  style = "table_template",
-                  first_row = TRUE,
-                  first_column = FALSE
-                ) |>
-                officer::body_add_par("", style = "Normal")
+                flextable::body_add_flextable(ft) |>
+                officer::body_add_par("")
+              
+              es_primera_tabla <- FALSE
             }
           }
         }
@@ -3045,32 +3217,30 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           dplyr::filter(!(indicador_nombre %in% indicadores_usados))
         
         if (nrow(datos_restantes) > 0) {
-          datos_tabla <- crear_tabla_word(as.data.frame(datos_restantes))
-          
           doc <- doc |>
-            officer::body_add_par("Otros indicadores", style = "heading 3")
+            officer::body_add_fpar(
+              officer::fpar(
+                officer::ftext("Otros indicadores", prop = fp_subtitulo),
+                fp_p = fp_par_keep
+              )
+            )
           
+          ft <- crear_flextable(as.data.frame(datos_restantes), FALSE)
           doc <- doc |>
-            officer::body_add_table(
-              value = datos_tabla,
-              style = "table_template",
-              first_row = TRUE,
-              first_column = FALSE
-            ) |>
-            officer::body_add_par("", style = "Normal")
+            flextable::body_add_flextable(ft) |>
+            officer::body_add_par("")
         }
       } else {
         # Si no hay subcategorías, mostrar todos los datos juntos
-        datos_tabla <- crear_tabla_word(as.data.frame(datos_cat))
-        
+        ft <- crear_flextable(as.data.frame(datos_cat), TRUE)
         doc <- doc |>
-          officer::body_add_table(
-            value = datos_tabla,
-            style = "table_template",
-            first_row = TRUE,
-            first_column = FALSE
-          ) |>
-          officer::body_add_par("", style = "Normal")
+          flextable::body_add_flextable(ft) |>
+          officer::body_add_par("")
+      }
+      
+      # Salto de página después de cada sección principal (excepto la última)
+      if (cat_id != names(datos_por_categoria)[length(names(datos_por_categoria))]) {
+        # doc <- doc |> officer::body_add_break(pos = "after")
       }
     }
     
@@ -3387,7 +3557,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
               numericInput(
                 "fecha_inicio",
                 label = tags$span(icon("calendar"), " Año inicio:"),
-                value = lubridate::year(Sys.Date()) - 6,
+                value = lubridate::year(Sys.Date() %m-% months(6)) - 6,
                 min = 1990,
                 max = lubridate::year(Sys.Date()) + 5,
                 step = 1,
@@ -3397,7 +3567,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
               numericInput(
                 "fecha_fin",
                 label = tags$span(icon("calendar-check"), " Año fin:"),
-                value = lubridate::year(Sys.Date()) + 2,
+                value = lubridate::year(Sys.Date() %m-% months(6)) + 2,
                 min = 1990,
                 max = lubridate::year(Sys.Date()) + 10,
                 step = 1,
@@ -3474,17 +3644,14 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           col_widths = c(6, 6),
           class = "mb-4",
           
-          downloadButton(
-            "btn_exportar_word",
-            label = tagList(icon("file-word"), " Exportar a Word"),
-            class = "btn-warning btn-lg w-100 py-3"
-          ),
+          downloadButton("btn_exportar_word",
+                           label = span(class = "btn-text", icon("file-word"), " Exportar a Word"),
+                           class = "btn-warning btn-lg w-100 py-3 btn-export"
+                         ),
           
-          downloadButton(
-            "btn_exportar_excel",
-            label = tagList(icon("file-excel"), " Exportar a Excel"),
-            class = "btn-success btn-lg w-100 py-3"
-          )
+          downloadButton("btn_exportar_excel",
+                         label = tagList(icon("file-excel"), " Exportar a Excel"),
+                         class = "btn-success btn-lg w-100 py-3")
         )
       )
     ),
@@ -3871,6 +4038,16 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       )
     })
     
+    observe({
+      if (is.null(datos_por_categoria()) || length(datos_por_categoria()) == 0) {
+        shinyjs::disable("btn_exportar_word")
+        shinyjs::disable("btn_exportar_excel")
+      } else {
+        shinyjs::enable("btn_exportar_word")
+        shinyjs::enable("btn_exportar_excel")
+      }
+    })
+    
     # Observar cambios en el país seleccionado y actualizar la bandera
     observeEvent(input$pais, {
       req(input$pais)
@@ -4030,6 +4207,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     
     # Botón de descarga
     observeEvent(input$btn_descargar, {
+      shinyjs::disable("btn_descargar")
+      on.exit({ shinyjs::enable("btn_descargar") })
       
       req(input$pais, input$fecha_inicio, input$fecha_fin)
       
@@ -4238,10 +4417,22 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         paste0("Dictamen_", input$pais, "_", format(Sys.Date(), "%Y%m%d"), ".docx")
       },
       content = function(file) {
+        shinyjs::disable("btn_exportar_word")
+        on.exit({ shinyjs::enable("btn_exportar_word") })
+        
         req(datos_por_categoria(), pais_seleccionado())
         
         # Crear archivo en directorio de salida
         archivo_destino <- file.path(output_dir, basename(file))
+        
+        # Ruta a la plantilla (ajustar según tu estructura)
+        plantilla_path <- NULL
+        if (file.exists("templates/Plantilla_Ejercicios_Dictamen.dotx")) {
+          plantilla_path <- "templates/Plantilla_Ejercicios_Dictamen.dotx"
+        } else if (file.exists("inst/templates/Plantilla_Ejercicios_Dictamen.dotx")) {
+          # Si es un paquete R
+          plantilla_path <- "inst/templates/Plantilla_Ejercicios_Dictamen.dotx"
+        }
         
         tryCatch({
           exportar_a_word(
@@ -4249,7 +4440,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
             pais_seleccionado(),
             as.Date(paste0(input$fecha_inicio, "-01-01")),
             as.Date(paste0(input$fecha_fin, "-12-31")),
-            archivo_destino
+            archivo_destino,
+            plantilla_word = plantilla_path  # <-- NUEVO PARÁMETRO
           )
           
           # Copiar al archivo temporal para descarga
@@ -4276,6 +4468,9 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         paste0("Dictamen_", input$pais, "_", format(Sys.Date(), "%Y%m%d"), ".xlsx")
       },
       content = function(file) {
+        shinyjs::disable("btn_exportar_excel")
+        on.exit({ shinyjs::enable("btn_exportar_excel") })
+        
         req(datos_por_categoria(), datos_descargados(), pais_seleccionado())
         
         # Crear archivo en directorio de salida
