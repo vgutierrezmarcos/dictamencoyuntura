@@ -2,18 +2,17 @@
 
 # 📊 Obtención de datos para el dictamen de coyuntura
 
-### Herramienta de preparación para Opositores a Técnico Comercial y Economista del Estado
+### Herramienta de preparación para opositores a Técnico Comercial y Economista del Estado
 
 [![R](https://img.shields.io/badge/R-276DC3?style=for-the-badge&logo=r&logoColor=white)](https://www.r-project.org/)
 [![Shiny](https://img.shields.io/badge/Shiny-0077B5?style=for-the-badge&logo=rstudio&logoColor=white)](https://shiny.rstudio.com/)
 
 **Una aplicación Shiny integral para la descarga, análisis y exportación de datos macroeconómicos de fuentes internacionales**
 
-[Características](#-características-principales) • [Instalación](#-instalación) • [Uso](#-guía-de-uso) • [Ejemplos](#-ejemplos) • [Contribuir](#-contribuir)
+[Características](#-características-principales) • [Instalación](#-instalación) • [Uso](#-guía-de-uso) • [Ejemplo](#-ejemplos) • [Contribuir](#-contribuir)
 
 ---
 
-![Aplicación Shiny](https://img.shields.io/badge/Versión-9.1-purple?style=flat-square)
 ![Estado](https://img.shields.io/badge/Estado-Activo-success?style=flat-square)
 ![Mantenimiento](https://img.shields.io/badge/Mantenimiento-Activo-brightgreen?style=flat-square)
 
@@ -282,9 +281,6 @@ dictamencoyuntura/
 │
 ├── 📂 templates/                          # Plantillas de exportación
 │   └── Plantilla_Ejercicios_Dictamen.dotx # Plantilla Word
-│
-├── 📂 man/                                # Documentación de funciones
-│   └── dictamencoyuntura_app.Rd
 │
 └── 📂 output/                             # Exportaciones (se crea al ejecutar)
     ├── Dictamen_ES_20260103.docx
