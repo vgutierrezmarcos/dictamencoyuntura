@@ -1,25 +1,43 @@
 # ============================================================================
 # APLICACIÓN SHINY PARA DESCARGA DE DATOS MACROECONÓMICOS
-# Preparación de Dictámenes Económicos - Versión 8.0
+# Preparación de Dictámenes Económicos - Versión 9.1
 # ============================================================================
 #
 # FUENTES DE DATOS:
-# 1. FMI (WEO, FM, BOP, CPI) - Usando paquete imfapi (API SDMX 3.0)
+# 1. FMI (WEO, FM, BOP, CPI, FSI) - Usando paquete imfapi (API SDMX 3.0)
 # 2. Eurostat
-# 3. OCDE (NUEVO v8.0)
+# 3. OCDE
 # 4. Banco Mundial (World Development Indicators)
 # 5. OMC (Organización Mundial del Comercio)
 # 6. BIS (Bank for International Settlements)
-# 7. DBnomics (NUEVO v8.0)
+# 7. DBnomics
 #
-# CAMBIOS v8.0:
-# - CORREGIDO: Indicadores BOP (cuenta corriente, inversión directa, etc.)
-#              ahora aparecen correctamente en tabla y Word
-# - CORREGIDO: Indicadores CPI se muestran con nombres descriptivos
-# - NUEVO: Fuente OCDE para países miembros (38 países)
-# - NUEVO: Fuente DBnomics como agregador de múltiples fuentes
-# - MEJORADO: Categorización ampliada para incluir nuevos indicadores
-# - MEJORADO: Sistema de deduplicación actualizado con prioridades
+# CAMBIOS v9.1:
+# - NUEVO: Exportaciones netas (contribución al crecimiento en p.p.)
+# - NUEVO: Output gap (% del PIB potencial) del FMI
+# - NUEVO: Variación porcentual del empleo y fuerza laboral
+# - NUEVO: Balanza de pagos en % del PIB (además de USD)
+# - NUEVO: Posición de inversión internacional neta (NIIP) en % PIB
+# - NUEVO: Deuda externa bruta (% PIB)
+# - NUEVO: Indicadores de oferta (agricultura, industria, manufacturas, servicios)
+# - MODIFICADO: Ahorro e inversión movidos a Sector Exterior
+# - MODIFICADO: "Ratio empleo-población" cambiado a "Tasa de empleo"
+# - MODIFICADO: Nombres de precios actualizados:
+#   * "Inflación (IPC)" → "Tasa de variación interanual del IPC promedio"
+#   * "Inflación fin de período" → "Tasa de variación interanual del IPC al final del periodo"
+# - MODIFICADO: Eliminados índices de la sección de precios (solo variaciones)
+# - MODIFICADO: Sector público dividido en "Ingresos y gastos" / "Balances y deuda"
+# - MODIFICADO: Títulos de subcategorías sin unidades de medida
+# - ELIMINADO: PIB nominal en USD del Banco Mundial
+# - ELIMINADO: PIB nominal fiscal en UML
+#
+# CAMBIOS v9.0:
+# - Sin conversión automática de unidades - valores en unidad original
+# - Descarga de FSI (Financial Soundness Indicators) del FMI
+# - Todos los indicadores muestran nombres descriptivos (no códigos)
+# - Mapeo completo de indicadores BOP con descripciones en español
+# - Indicadores monetarios y financieros ampliados (como en Narnia)
+# - Categorización de indicadores más precisa
 #
 # Fecha: Enero 2026
 # ============================================================================
@@ -110,13 +128,13 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   tema_pastel <- bs_theme(
     version = 5,
     bootswatch = "flatly",
-    bg = "#f8f9fa",
+    bg = "#E2EFD9",
     fg = "#2c3e50",
-    primary = "#7fadcf",
+    primary = "#5F2987",
     secondary = "#95a5a6",
-    success = "#a8d5ba",
+    success = "#217346",
     info = "#87ceeb",
-    warning = "#f4c7ab",
+    warning = "#2B579A",
     danger = "#e8a0a0",
     base_font = font_google("Source Sans Pro"),
     heading_font = font_google("Source Sans Pro"),
@@ -129,8 +147,25 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       }
 
       .navbar {
-        background: linear-gradient(135deg, #7fadcf 0%, #5a9bc9 100%) !important;
+        background: linear-gradient(135deg, #5F2987 0%, #7B3BA3 100%) !important;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+
+      .navbar-nav .nav-link {
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .navbar-nav .nav-link:hover {
+        color: #ffffff !important;
+      }
+
+      .navbar-nav .nav-link.active {
+        color: #ffffff !important;
+        font-weight: 600;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 6px;
       }
 
       .navbar-brand {
@@ -143,6 +178,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         border-radius: 12px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background-color: #ffffff;
       }
 
       .card:hover {
@@ -151,7 +187,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       }
 
       .card-header {
-        background: linear-gradient(135deg, #7fadcf 0%, #a8c8de 100%);
+        background: linear-gradient(135deg, #5F2987 0%, #7B3BA3 100%);
         color: white;
         border-radius: 12px 12px 0 0 !important;
         font-weight: 600;
@@ -159,7 +195,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       }
 
       .btn-primary {
-        background: linear-gradient(135deg, #7fadcf 0%, #5a9bc9 100%);
+        background: linear-gradient(135deg, #5F2987 0%, #7B3BA3 100%);
         border: none;
         border-radius: 8px;
         font-weight: 600;
@@ -168,36 +204,36 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       }
 
       .btn-primary:hover {
-        background: linear-gradient(135deg, #5a9bc9 0%, #4a8bb9 100%);
+        background: linear-gradient(135deg, #7B3BA3 0%, #8E4DB6 100%);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(90, 155, 201, 0.4);
+        box-shadow: 0 4px 12px rgba(95, 41, 135, 0.4);
       }
 
       .btn-success {
-        background: linear-gradient(135deg, #a8d5ba 0%, #8bc9a0 100%);
+        background: linear-gradient(135deg, #217346 0%, #1D6B3F 100%);
         border: none;
-        color: #2d5a3d;
+        color: white;
         border-radius: 8px;
         font-weight: 600;
       }
 
       .btn-success:hover {
-        background: linear-gradient(135deg, #8bc9a0 0%, #6eb886 100%);
-        color: #2d5a3d;
+        background: linear-gradient(135deg, #1D6B3F 0%, #185C36 100%);
+        color: white;
         transform: translateY(-2px);
       }
 
       .btn-warning {
-        background: linear-gradient(135deg, #f4c7ab 0%, #e8b598 100%);
+        background: linear-gradient(135deg, #2B579A 0%, #1E4175 100%);
         border: none;
-        color: #5a3825;
+        color: white;
         border-radius: 8px;
         font-weight: 600;
       }
 
       .btn-warning:hover {
-        background: linear-gradient(135deg, #e8b598 0%, #dca385 100%);
-        color: #5a3825;
+        background: linear-gradient(135deg, #1E4175 0%, #163358 100%);
+        color: white;
         transform: translateY(-2px);
       }
 
@@ -217,37 +253,78 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       }
 
       .form-control, .form-select {
-        border: 2px solid #d4e2ef;
+        border: 2px solid #c5d9c0;
         border-radius: 8px;
         padding: 0.6rem 1rem;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        background-color: #ffffff;
       }
 
       .form-control:focus, .form-select:focus {
-        border-color: #7fadcf;
-        box-shadow: 0 0 0 0.2rem rgba(127, 173, 207, 0.25);
+        border-color: #5F2987;
+        box-shadow: 0 0 0 0.2rem rgba(95, 41, 135, 0.25);
       }
 
       .nav-tabs .nav-link {
         border-radius: 8px 8px 0 0;
         font-weight: 500;
-        color: #5a7a8a;
+        color: #5F2987;
         transition: all 0.2s ease;
       }
 
       .nav-tabs .nav-link.active {
-        background-color: #7fadcf;
-        color: white;
-        border-color: #7fadcf;
+        background-color: #5F2987;
+        color: #ffffff;
+        border-color: #5F2987;
       }
 
       .nav-tabs .nav-link:hover:not(.active) {
-        background-color: #e8f1f8;
-        color: #5a9bc9;
+        background-color: #f0e6f5;
+        color: #7B3BA3;
       }
 
       .dataTables_wrapper {
         font-family: 'Segoe UI', sans-serif !important;
+        background-color: #ffffff !important;
+      }
+
+      .dataTables_wrapper .dataTable {
+        background-color: #ffffff !important;
+      }
+
+      .dataTables_wrapper .dataTable thead th {
+        background-color: #E2EFD9 !important;
+        color: #2c3e50 !important;
+        font-weight: 600;
+      }
+
+      .dataTables_wrapper .dataTable tbody tr {
+        background-color: #ffffff !important;
+      }
+
+      .dataTables_wrapper .dataTable tbody tr td {
+        background-color: #ffffff !important;
+      }
+
+      .dataTables_wrapper .dataTable tbody tr:hover td {
+        background-color: #f8f9fa !important;
+      }
+
+      .dataTables_wrapper .dataTable tbody tr.odd {
+        background-color: #ffffff !important;
+      }
+
+      .dataTables_wrapper .dataTable tbody tr.even {
+        background-color: #ffffff !important;
+      }
+
+      .dataTables_wrapper .dataTable tbody tr.odd td,
+      .dataTables_wrapper .dataTable tbody tr.even td {
+        background-color: #ffffff !important;
+      }
+
+      table.dataTable tbody tr {
+        background-color: #ffffff !important;
       }
 
       .accordion {
@@ -256,14 +333,14 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       }
 
       .accordion-button {
-        background: linear-gradient(135deg, #7fadcf 0%, #a8c8de 100%);
+        background: linear-gradient(135deg, #5F2987 0%, #7B3BA3 100%);
         color: white;
         font-weight: 600;
         padding: 1rem 1.25rem;
       }
 
       .accordion-button:not(.collapsed) {
-        background: linear-gradient(135deg, #5a9bc9 0%, #7fadcf 100%);
+        background: linear-gradient(135deg, #7B3BA3 0%, #5F2987 100%);
         color: white;
       }
 
@@ -278,10 +355,11 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
 
       .accordion-body {
         padding: 1.5rem;
+        background-color: #ffffff;
       }
 
       .hero-section {
-        background: linear-gradient(135deg, #7fadcf 0%, #a8c8de 50%, #d4e8f0 100%);
+        background: linear-gradient(135deg, #5F2987 0%, #7B3BA3 50%, #9B5DC4 100%);
         border-radius: 15px;
         padding: 2rem;
         margin-bottom: 1.5rem;
@@ -306,11 +384,11 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       .progress {
         height: 8px;
         border-radius: 4px;
-        background-color: #e8f1f8;
+        background-color: #d9e6d5;
       }
 
       .progress-bar {
-        background: linear-gradient(90deg, #7fadcf 0%, #5a9bc9 100%);
+        background: linear-gradient(90deg, #5F2987 0%, #7B3BA3 100%);
         border-radius: 4px;
       }
 
@@ -336,10 +414,11 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       .fuente-badge-eurostat { background-color: #a5c9d4; color: #2d3d4a; }
 
       .resumen-fuentes {
-        background-color: #f0f7fc;
+        background-color: #ffffff;
         border-radius: 8px;
         padding: 1rem;
         margin-top: 1rem;
+        border: 1px solid #c5d9c0;
       }
 
       .alert-eurostat {
@@ -448,20 +527,21 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   indicadores_banco_mundial <- list(
     sector_real = list(
       "NY.GDP.MKTP.KD.ZG" = c("PIB real", "var. %", "Variación porcentual"),
-      "NY.GDP.MKTP.CD" = c("PIB nominal", "mill. USD", "Millones de dólares (USD)"),
       "NY.GDP.PCAP.CD" = c("PIB per cápita", "USD", "Dólares (USD)"),
       "NE.CON.PRVT.ZS" = c("Consumo privado", "% PIB", "Porcentaje del PIB"),
       "NE.CON.GOVT.ZS" = c("Consumo público", "% PIB", "Porcentaje del PIB"),
       "NE.GDI.TOTL.ZS" = c("Formación bruta de capital", "% PIB", "Porcentaje del PIB"),
-      "NV.AGR.TOTL.ZS" = c("Agricultura, valor añadido", "% PIB", "Porcentaje del PIB"),
-      "NV.IND.TOTL.ZS" = c("Industria, valor añadido", "% PIB", "Porcentaje del PIB"),
-      "NV.SRV.TOTL.ZS" = c("Servicios, valor añadido", "% PIB", "Porcentaje del PIB")
+      # Indicadores de oferta (% del PIB/VAB)
+      "NV.AGR.TOTL.ZS" = c("Agricultura, silvicultura y pesca", "% PIB", "Porcentaje del PIB"),
+      "NV.IND.TOTL.ZS" = c("Industria (incluye construcción)", "% PIB", "Porcentaje del PIB"),
+      "NV.IND.MANF.ZS" = c("Manufacturas", "% PIB", "Porcentaje del PIB"),
+      "NV.SRV.TOTL.ZS" = c("Servicios", "% PIB", "Porcentaje del PIB")
     ),
     
     mercado_laboral = list(
       "SL.UEM.TOTL.ZS" = c("Tasa de desempleo", "%", "Porcentaje"),
       "SL.TLF.CACT.ZS" = c("Tasa de actividad", "%", "Porcentaje"),
-      "SL.EMP.TOTL.SP.ZS" = c("Ratio empleo-población", "%", "Porcentaje"),
+      "SL.EMP.TOTL.SP.ZS" = c("Tasa de empleo", "%", "Porcentaje"),
       "SL.TLF.TOTL.IN" = c("Población activa", "mill.", "Millones de personas"),
       "SL.UEM.TOTL.NE.ZS" = c("Desempleo nacional", "%", "Porcentaje")
     ),
@@ -485,7 +565,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     ),
     
     precios_costes = list(
-      "FP.CPI.TOTL.ZG" = c("Inflación (IPC)", "var. %", "Variación porcentual"),
+      "FP.CPI.TOTL.ZG" = c("Tasa de variación interanual del IPC promedio", "var. %", "Variación porcentual"),
       "NY.GDP.DEFL.KD.ZG" = c("Deflactor del PIB", "var. %", "Variación porcentual")
     ),
     
@@ -513,32 +593,42 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       "NGDP_RPCH" = c("PIB real", "var. %", "Variación porcentual"),
       "NGDPD" = c("PIB nominal", "mm. USD", "Miles de millones de dólares (USD)"),
       "NGDPDPC" = c("PIB per cápita", "USD", "Dólares (USD)"),
-      "NID_NGDP" = c("Inversión total", "% PIB", "Porcentaje del PIB"),
-      "NGSD_NGDP" = c("Ahorro nacional bruto", "% PIB", "Porcentaje del PIB")
+      "NGAP_NPGDP" = c("Output gap", "% PIB pot.", "Porcentaje del PIB potencial"),
+      "NX_RPCH" = c("Exportaciones netas (contrib. crecimiento)", "p.p.", "Puntos porcentuales")
     ),
     
     mercado_laboral = list(
       "LUR" = c("Tasa de desempleo", "%", "Porcentaje"),
-      "LE" = c("Empleo", "mill.", "Millones de personas")
+      "LE" = c("Empleo", "mill.", "Millones de personas"),
+      "LE_RPCH" = c("Empleo", "var. %", "Variación porcentual"),
+      "LF" = c("Fuerza laboral", "mill.", "Millones de personas"),
+      "LF_RPCH" = c("Fuerza laboral", "var. %", "Variación porcentual")
     ),
     
     sector_exterior = list(
       "BCA_NGDPD" = c("Cuenta corriente", "% PIB", "Porcentaje del PIB"),
       "TX_RPCH" = c("Volumen de exportaciones", "var. %", "Variación porcentual"),
-      "TM_RPCH" = c("Volumen de importaciones", "var. %", "Variación porcentual")
+      "TM_RPCH" = c("Volumen de importaciones", "var. %", "Variación porcentual"),
+      "BNIIP_GDP" = c("Posición de inversión internacional neta", "% PIB", "Porcentaje del PIB"),
+      "D_NGDPD" = c("Deuda externa bruta", "% PIB", "Porcentaje del PIB"),
+      "NID_NGDP" = c("Inversión total", "% PIB", "Porcentaje del PIB"),
+      "NGSD_NGDP" = c("Ahorro nacional bruto", "% PIB", "Porcentaje del PIB")
     ),
     
     sector_publico = list(
       "GGXWDG_NGDP" = c("Deuda pública bruta", "% PIB", "Porcentaje del PIB"),
-      "GGXCNL_NGDP" = c("Saldo primario", "% PIB", "Porcentaje del PIB"),
-      "GGXONLB_NGDP" = c("Saldo público", "% PIB", "Porcentaje del PIB"),
+      "GGXWDN_NGDP" = c("Deuda pública neta", "% PIB", "Porcentaje del PIB"),
+      "GGXCNL_NGDP" = c("Saldo fiscal", "% PIB", "Porcentaje del PIB"),
+      "GGXONLB_NGDP" = c("Saldo primario", "% PIB", "Porcentaje del PIB"),
+      "GGSB_NPGDP" = c("Saldo estructural", "% PIB pot.", "Porcentaje del PIB potencial"),
       "GGR_NGDP" = c("Ingresos públicos", "% PIB", "Porcentaje del PIB"),
       "GGX_NGDP" = c("Gastos públicos", "% PIB", "Porcentaje del PIB")
     ),
     
     precios_costes = list(
-      "PCPIPCH" = c("Inflación (IPC)", "var. %", "Variación porcentual"),
-      "PCPIEPCH" = c("Inflación fin de período", "var. %", "Variación porcentual")
+      "PCPIPCH" = c("Tasa de variación interanual del IPC promedio", "var. %", "Variación porcentual"),
+      "PCPIEPCH" = c("Tasa de variación interanual del IPC al final del periodo", "var. %", "Variación porcentual"),
+      "NGDP_D" = c("Deflactor del PIB", "var. %", "Variación porcentual")
     ),
     
     indicadores_monetarios = list(
@@ -551,7 +641,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       "FM2_XDC" = c("Agregado monetario M2", "mill. UML", "Millones de moneda local"),
       "FM_3M_NUM" = c("Agregado monetario M3", "mill. UML", "Millones de moneda local"),
       "FASMB_XDC" = c("Base monetaria", "mill. UML", "Millones de moneda local"),
-      "FIRA_PA" = c("Tipo de interés repo", "%", "Porcentaje anual")
+      "FIRA_PA" = c("Tipo de interés repo", "%", "Porcentaje anual"),
+      "FPS_GDP" = c("Crédito sector privado", "% PIB", "Porcentaje del PIB")
     ),
     
     pro_memoria = list(
@@ -784,24 +875,34 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     # 3. Mapeo completo de indicadores conocidos
     # -------------------------------------------------------------------------
     mapeo_indicadores <- list(
-      # === SECTOR REAL ===
-      "NGDP_RPCH" = c("PIB real", "var. %", "Variación porcentual"),
-      "NGDP_R" = c("PIB real", "mm. UML", "Miles de millones de moneda local"),
-      "NGDPD" = c("PIB nominal", "mm. USD", "Miles de millones de dólares (USD)"),
-      "NGDP" = c("PIB nominal", "mm. UML", "Miles de millones de moneda local"),
-      "NGDPDPC" = c("PIB per cápita", "USD", "Dólares (USD)"),
+      # === SECTOR REAL - Producción y demanda ===
+      "NGDP_RPCH" = c("PIB real", "var. %", "Variación porcentual interanual"),
+      "NGDP_R" = c("PIB real (nivel)", "UML", "Moneda local (unidad original)"),
+      "NGDPD" = c("PIB nominal", "USD", "Dólares (unidad original)"),
+      "NGDP" = c("PIB nominal (ML)", "UML", "Moneda local (unidad original)"),
+      "NGDPDPC" = c("PIB per cápita", "USD", "Dólares por persona"),
+      "NGDPPC" = c("PIB per cápita nominal", "USD", "Dólares por persona"),
       "NGDPRPC" = c("PIB real per cápita", "UML", "Moneda local"),
       "NGDPRPPPPC" = c("PIB real per cápita (PPA)", "USD int.", "Dólares internacionales"),
       "NID_NGDP" = c("Inversión total", "% PIB", "Porcentaje del PIB"),
       "NGSD_NGDP" = c("Ahorro nacional bruto", "% PIB", "Porcentaje del PIB"),
+      # Output gap
+      "NGAP_NPGDP" = c("Output gap", "% PIB pot.", "Porcentaje del PIB potencial"),
+      # Exportaciones netas (contribución al crecimiento)
+      "NX_RPCH" = c("Exportaciones netas (contrib. crecimiento)", "p.p.", "Puntos porcentuales"),
       "FLIBOR6" = c("LIBOR 6 meses", "%", "Porcentaje anual"),
       
       # === MERCADO LABORAL ===
-      "LUR" = c("Tasa de desempleo", "%", "Porcentaje"),
-      "LE" = c("Empleo", "mill.", "Millones de personas"),
+      "LUR" = c("Tasa de desempleo", "%", "Porcentaje de la población activa"),
+      "LE" = c("Empleo", "personas", "Número de empleados"),
+      "LE_RPCH" = c("Empleo", "var. %", "Variación porcentual interanual"),
+      "LP" = c("Población", "personas", "Número total de personas"),
+      "LPR" = c("Tasa de participación laboral", "%", "Porcentaje de la población"),
+      "LF" = c("Fuerza laboral", "personas", "Número de personas"),
+      "LF_RPCH" = c("Fuerza laboral", "var. %", "Variación porcentual interanual"),
       
-      # === SECTOR EXTERIOR ===
-      "BCA" = c("Balanza cuenta corriente", "mm. USD", "Miles de millones de dólares (USD)"),
+      # === SECTOR EXTERIOR - WEO ===
+      "BCA" = c("Balanza cuenta corriente", "USD", "Dólares (unidad original)"),
       "BCA_NGDPD" = c("Cuenta corriente", "% PIB", "Porcentaje del PIB"),
       "TX_RPCH" = c("Volumen de exportaciones", "var. %", "Variación porcentual"),
       "TM_RPCH" = c("Volumen de importaciones", "var. %", "Variación porcentual"),
@@ -809,45 +910,110 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       "TMG_RPCH" = c("Volumen de importaciones de bienes", "var. %", "Variación porcentual"),
       "TXS_RPCH" = c("Volumen de exportaciones de servicios", "var. %", "Variación porcentual"),
       "TMS_RPCH" = c("Volumen de importaciones de servicios", "var. %", "Variación porcentual"),
-      "TX" = c("Exportaciones de bienes y servicios", "mm. USD", "Miles de millones de dólares (USD)"),
-      "TM" = c("Importaciones de bienes y servicios", "mm. USD", "Miles de millones de dólares (USD)"),
-      "TXG_FOB_USD" = c("Exportaciones de bienes FOB", "mm. USD", "Miles de millones de dólares (USD)"),
-      "TMG_CIF_USD" = c("Importaciones de bienes CIF", "mm. USD", "Miles de millones de dólares (USD)"),
-      # BOP indicators - v8.0 AMPLIADO
-      "BCA_BP6_USD" = c("Cuenta corriente (BOP)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BFA_BP6_USD" = c("Cuenta financiera", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BFD_BP6_USD" = c("Inversión directa neta", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BFP_BP6_USD" = c("Inversión de cartera neta", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BGS_BP6_USD" = c("Balanza de bienes y servicios", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BXG_BP6_USD" = c("Exportaciones de bienes (BOP)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BMG_BP6_USD" = c("Importaciones de bienes (BOP)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BXGS_BP6_USD" = c("Exportaciones bienes y servicios (BOP)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BMGS_BP6_USD" = c("Importaciones bienes y servicios (BOP)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BIP_BP6_USD" = c("Rentas primarias netas", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BIS_BP6_USD" = c("Rentas secundarias netas", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BFDI_BP6_USD" = c("Inversión directa (activos)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BFDL_BP6_USD" = c("Inversión directa (pasivos)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BFPI_BP6_USD" = c("Inversión cartera (activos)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BFPL_BP6_USD" = c("Inversión cartera (pasivos)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BFOI_BP6_USD" = c("Otra inversión (activos)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BFOL_BP6_USD" = c("Otra inversión (pasivos)", "mm. USD", "Miles de millones de dólares (USD)"),
-      "BRA_BP6_USD" = c("Activos de reserva", "mm. USD", "Miles de millones de dólares (USD)"),
+      "TX" = c("Exportaciones de bienes y servicios", "USD", "Dólares (unidad original)"),
+      "TM" = c("Importaciones de bienes y servicios", "USD", "Dólares (unidad original)"),
+      "TXG_FOB_USD" = c("Exportaciones de bienes FOB", "USD", "Dólares (unidad original)"),
+      "TMG_CIF_USD" = c("Importaciones de bienes CIF", "USD", "Dólares (unidad original)"),
+      
+      # === SECTOR EXTERIOR - BOP (Balance of Payments) v9.0 AMPLIADO ===
+      # --- Balanza de pagos en USD (miles de millones) ---
+      "CAB" = c("Cuenta corriente", "mm. USD", "Miles de millones de dólares"),
+      "CABXEF" = c("Cuenta corriente (exc. oro)", "mm. USD", "Miles de millones de dólares"),
+      "BCA_BP6_USD" = c("Cuenta corriente (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      "BGS" = c("Balanza de bienes y servicios", "mm. USD", "Miles de millones de dólares"),
+      "BGS_BP6_USD" = c("Balanza de bienes y servicios (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      "BG" = c("Balanza de bienes", "mm. USD", "Miles de millones de dólares"),
+      "BXG" = c("Exportaciones de bienes", "mm. USD", "Miles de millones de dólares"),
+      "BXG_BP6_USD" = c("Exportaciones de bienes (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      "BMG" = c("Importaciones de bienes", "mm. USD", "Miles de millones de dólares"),
+      "BMG_BP6_USD" = c("Importaciones de bienes (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      "BS" = c("Balanza de servicios", "mm. USD", "Miles de millones de dólares"),
+      "BXS" = c("Exportaciones de servicios", "mm. USD", "Miles de millones de dólares"),
+      "BMS" = c("Importaciones de servicios", "mm. USD", "Miles de millones de dólares"),
+      "BXGS" = c("Exportaciones de bienes y servicios", "mm. USD", "Miles de millones de dólares"),
+      "BXGS_BP6_USD" = c("Exportaciones bienes y servicios (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      "BMGS" = c("Importaciones de bienes y servicios", "mm. USD", "Miles de millones de dólares"),
+      "BMGS_BP6_USD" = c("Importaciones bienes y servicios (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      # Rentas
+      "BIP" = c("Balanza de rentas primarias", "mm. USD", "Miles de millones de dólares"),
+      "BIP_BP6_USD" = c("Rentas primarias netas (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      "BIS" = c("Balanza de rentas secundarias", "mm. USD", "Miles de millones de dólares"),
+      "BIS_BP6_USD" = c("Rentas secundarias netas (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      "BIPS" = c("Rentas primarias y secundarias", "mm. USD", "Miles de millones de dólares"),
+      # Cuenta de capital
+      "BK" = c("Cuenta de capital", "mm. USD", "Miles de millones de dólares"),
+      "BKT" = c("Transferencias de capital", "mm. USD", "Miles de millones de dólares"),
+      # Cuenta financiera
+      "BF" = c("Cuenta financiera", "mm. USD", "Miles de millones de dólares"),
+      "BFA_BP6_USD" = c("Cuenta financiera (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      # Inversión directa
+      "BFD" = c("Inversión directa neta", "mm. USD", "Miles de millones de dólares"),
+      "BFD_BP6_USD" = c("Inversión directa neta (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      "BFDA" = c("Inversión directa - activos", "mm. USD", "Miles de millones de dólares"),
+      "BFDI_BP6_USD" = c("Inversión directa (activos)", "mm. USD", "Miles de millones de dólares"),
+      "BFDI" = c("Inversión directa en el país", "mm. USD", "Miles de millones de dólares"),
+      "BFDL_BP6_USD" = c("Inversión directa (pasivos)", "mm. USD", "Miles de millones de dólares"),
+      "BFDL" = c("Inversión directa en el exterior", "mm. USD", "Miles de millones de dólares"),
+      # Inversión de cartera
+      "BFP" = c("Inversión de cartera neta", "mm. USD", "Miles de millones de dólares"),
+      "BFP_BP6_USD" = c("Inversión de cartera neta (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      "BFPA" = c("Inversión cartera - activos", "mm. USD", "Miles de millones de dólares"),
+      "BFPI_BP6_USD" = c("Inversión cartera (activos)", "mm. USD", "Miles de millones de dólares"),
+      "BFPL" = c("Inversión cartera - pasivos", "mm. USD", "Miles de millones de dólares"),
+      "BFPL_BP6_USD" = c("Inversión cartera (pasivos)", "mm. USD", "Miles de millones de dólares"),
+      # Derivados financieros
+      "BFFD" = c("Derivados financieros", "mm. USD", "Miles de millones de dólares"),
+      "BFFDA" = c("Derivados financieros - activos", "mm. USD", "Miles de millones de dólares"),
+      "BFFDL" = c("Derivados financieros - pasivos", "mm. USD", "Miles de millones de dólares"),
+      # Otra inversión
+      "BFO" = c("Otra inversión neta", "mm. USD", "Miles de millones de dólares"),
+      "BFOA" = c("Otra inversión - activos", "mm. USD", "Miles de millones de dólares"),
+      "BFOI_BP6_USD" = c("Otra inversión (activos)", "mm. USD", "Miles de millones de dólares"),
+      "BFOL" = c("Otra inversión - pasivos", "mm. USD", "Miles de millones de dólares"),
+      "BFOL_BP6_USD" = c("Otra inversión (pasivos)", "mm. USD", "Miles de millones de dólares"),
+      # Reservas
+      "BRA" = c("Activos de reserva", "mm. USD", "Miles de millones de dólares"),
+      "BRA_BP6_USD" = c("Activos de reserva (BPM6)", "mm. USD", "Miles de millones de dólares"),
+      # Errores y omisiones
+      "BEO" = c("Errores y omisiones", "mm. USD", "Miles de millones de dólares"),
+      
+      # --- Balanza de pagos en % del PIB ---
+      "BCA_NGDPD" = c("Cuenta corriente", "% PIB", "Porcentaje del PIB"),
+      "BGS_NGDPD" = c("Balanza de bienes y servicios", "% PIB", "Porcentaje del PIB"),
+      "BG_NGDPD" = c("Balanza de bienes", "% PIB", "Porcentaje del PIB"),
+      "BS_NGDPD" = c("Balanza de servicios", "% PIB", "Porcentaje del PIB"),
+      "BIP_NGDPD" = c("Balanza de rentas primarias", "% PIB", "Porcentaje del PIB"),
+      "BIS_NGDPD" = c("Balanza de rentas secundarias", "% PIB", "Porcentaje del PIB"),
+      "BK_NGDPD" = c("Cuenta de capital", "% PIB", "Porcentaje del PIB"),
+      "BF_NGDPD" = c("Cuenta financiera", "% PIB", "Porcentaje del PIB"),
+      "BFD_NGDPD" = c("Inversión directa neta", "% PIB", "Porcentaje del PIB"),
+      "BFP_NGDPD" = c("Inversión de cartera neta", "% PIB", "Porcentaje del PIB"),
+      "BFO_NGDPD" = c("Otra inversión neta", "% PIB", "Porcentaje del PIB"),
+      "BEO_NGDPD" = c("Errores y omisiones", "% PIB", "Porcentaje del PIB"),
+      
+      # --- Posición de inversión internacional y deuda externa ---
+      "BNIIP" = c("Posición de inversión internacional neta", "mm. USD", "Miles de millones de dólares"),
+      "BNIIP_GDP" = c("Posición de inversión internacional neta", "% PIB", "Porcentaje del PIB"),
+      "D_NGDPD" = c("Deuda externa bruta", "% PIB", "Porcentaje del PIB"),
+      "D" = c("Deuda externa bruta", "mm. USD", "Miles de millones de dólares"),
       
       # === SECTOR PÚBLICO ===
       "GGXWDG_NGDP" = c("Deuda pública bruta", "% PIB", "Porcentaje del PIB"),
-      "GGXWDG" = c("Deuda pública bruta", "mm. UML", "Miles de millones de moneda local"),
+      "GGXWDG" = c("Deuda pública bruta (nivel)", "UML", "Moneda local (unidad original)"),
       "GGXCNL_NGDP" = c("Saldo fiscal", "% PIB", "Porcentaje del PIB"),
-      "GGXCNL" = c("Saldo fiscal", "mm. UML", "Miles de millones de moneda local"),
+      "GGXCNL" = c("Saldo fiscal (nivel)", "UML", "Moneda local (unidad original)"),
       "GGXONLB_NGDP" = c("Saldo primario", "% PIB", "Porcentaje del PIB"),
-      "GGXONLB" = c("Saldo primario", "mm. UML", "Miles de millones de moneda local"),
+      "GGXONLB" = c("Saldo primario (nivel)", "UML", "Moneda local (unidad original)"),
       "GGR_NGDP" = c("Ingresos públicos", "% PIB", "Porcentaje del PIB"),
-      "GGR" = c("Ingresos públicos", "mm. UML", "Miles de millones de moneda local"),
+      "GGR" = c("Ingresos públicos (nivel)", "UML", "Moneda local (unidad original)"),
       "GGX_NGDP" = c("Gastos públicos", "% PIB", "Porcentaje del PIB"),
-      "GGX" = c("Gastos públicos", "mm. UML", "Miles de millones de moneda local"),
+      "GGX" = c("Gastos públicos (nivel)", "UML", "Moneda local (unidad original)"),
       "GGXWDN_NGDP" = c("Deuda pública neta", "% PIB", "Porcentaje del PIB"),
-      "GGXWDN" = c("Deuda pública neta", "mm. UML", "Miles de millones de moneda local"),
-      # FM (Fiscal Monitor) - Indicadores estructurales
-      "CAB_S13_POPGDP_PT" = c("Saldo estructural", "% PIB pot.", "Porcentaje del PIB potencial"),
+      "GGXWDN" = c("Deuda pública neta (nivel)", "UML", "Moneda local (unidad original)"),
+      "GGSB" = c("Saldo estructural (nivel)", "UML", "Moneda local (unidad original)"),
+      "GGSB_NPGDP" = c("Saldo estructural", "% PIB pot.", "Porcentaje del PIB potencial"),
+      # FM (Fiscal Monitor) - Indicadores adicionales
+      "CAB_S13_POPGDP_PT" = c("Saldo estructural (FM)", "% PIB pot.", "Porcentaje del PIB potencial"),
       "CAPB_S13_POPGDP_PT" = c("Saldo primario estructural", "% PIB pot.", "Porcentaje del PIB potencial"),
       "EXP_S13_POPGDP_PT" = c("Gasto estructural", "% PIB pot.", "Porcentaje del PIB potencial"),
       "REV_S13_POPGDP_PT" = c("Ingreso estructural", "% PIB pot.", "Porcentaje del PIB potencial"),
@@ -857,48 +1023,149 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       "G63N_S13_POGDP_PT" = c("Gasto en intereses neto", "% PIB pot.", "Porcentaje del PIB potencial"),
       "GNLB_S13_POGDP_PT" = c("Préstamo/endeudamiento neto", "% PIB pot.", "Porcentaje del PIB potencial"),
       "GPB_S13_POGDP_PT" = c("Saldo primario (FM)", "% PIB pot.", "Porcentaje del PIB potencial"),
-      "GGSB" = c("Saldo estructural (WEO)", "mm. UML", "Miles de millones de moneda local"),
-      "GGSB_NPGDP" = c("Saldo estructural (WEO)", "% PIB pot.", "Porcentaje del PIB potencial"),
       
-      # === PRECIOS ===
-      "PCPIPCH" = c("Inflación (IPC)", "var. %", "Variación porcentual"),
-      "PCPIEPCH" = c("Inflación fin de período", "var. %", "Variación porcentual"),
-      "PCPI_IX" = c("IPC (índice)", "índice", "Índice de precios al consumo"),
-      "NGDP_D" = c("Deflactor del PIB", "índice", "Índice"),
-      "PCPI_PC_CP_A_PT" = c("Inflación anual", "var. %", "Variación porcentual anual"),
-      "PCPIH_PC_CP_A_PT" = c("Inflación (HICP)", "var. %", "Variación porcentual anual"),
+      # === PRECIOS Y COSTES ===
+      "PCPIPCH" = c("Tasa de variación interanual del IPC promedio", "var. %", "Variación porcentual anual"),
+      "PCPIEPCH" = c("Tasa de variación interanual del IPC al final del periodo", "var. %", "Variación porcentual fin de período"),
+      "NGDP_D" = c("Deflactor del PIB", "var. %", "Variación porcentual"),
+      "PCPI_PC_CP_A_PT" = c("Tasa de variación interanual del IPC promedio (CPI)", "var. %", "Variación porcentual anual"),
+      "PCPIH_PC_CP_A_PT" = c("Tasa de variación interanual del IPC armonizado (HICP)", "var. %", "Variación porcentual anual"),
       
-      # === INDICADORES MONETARIOS/FINANCIEROS (IFS) ===
+      # === INDICADORES MONETARIOS Y FINANCIEROS (IFS) ===
       "FPOLM_PA" = c("Tipo de interés de política monetaria", "%", "Porcentaje anual"),
       "FITB_PA" = c("Tipo de interés letras del Tesoro", "%", "Porcentaje anual"),
       "FILR_PA" = c("Tipo de interés de préstamos", "%", "Porcentaje anual"),
       "FIDR_PA" = c("Tipo de interés de depósitos", "%", "Porcentaje anual"),
       "FIMM_PA" = c("Tipo interbancario", "%", "Porcentaje anual"),
-      "FM1_XDC" = c("Agregado monetario M1", "mm. UML", "Miles de millones de moneda local"),
-      "FM2_XDC" = c("Agregado monetario M2", "mm. UML", "Miles de millones de moneda local"),
-      "FMB_XDC" = c("Base monetaria", "mm. UML", "Miles de millones de moneda local"),
-      "EREER_IX" = c("Tipo de cambio efectivo real (FMI)", "índice", "Índice (2010=100)"),
-      "ENEER_IX" = c("Tipo de cambio efectivo nominal (FMI)", "índice", "Índice (2010=100)"),
-      "ENDA_XDC_USD_RATE" = c("Tipo de cambio nominal", "UML/USD", "Unidades de moneda local por USD"),
-      # IFS con códigos alternativos
-      "NGDP_XDC" = c("PIB nominal (ML)", "mm. UML", "Miles de millones de moneda local"),
+      "FIRA_PA" = c("Tipo de interés repo", "%", "Porcentaje anual"),
+      "FM1_XDC" = c("Agregado monetario M1", "UML", "Moneda local (unidad original)"),
+      "FM2_XDC" = c("Agregado monetario M2", "UML", "Moneda local (unidad original)"),
+      "FM3_XDC" = c("Agregado monetario M3", "UML", "Moneda local (unidad original)"),
+      "FMB_XDC" = c("Base monetaria", "UML", "Moneda local (unidad original)"),
+      "FASMB_XDC" = c("Base monetaria amplia", "UML", "Moneda local (unidad original)"),
+      "EREER_IX" = c("Tipo de cambio efectivo real", "índice", "Índice (año base variable)"),
+      "ENEER_IX" = c("Tipo de cambio efectivo nominal", "índice", "Índice (año base variable)"),
+      "ENDA_XDC_USD_RATE" = c("Tipo de cambio nominal USD", "UML/USD", "Unidades de moneda local por USD"),
+      "NGDP_XDC" = c("PIB nominal (ML)", "UML", "Moneda local (unidad original)"),
       "AIP_IX" = c("Producción industrial", "índice", "Índice de producción industrial"),
-      "RADE_IX" = c("Reservas internacionales", "mm. USD", "Miles de millones de dólares (USD)"),
+      "RADE_IX" = c("Reservas internacionales", "USD", "Dólares (unidad original)"),
+      # Crédito
+      "FPS_XDC" = c("Crédito sector privado", "UML", "Moneda local (unidad original)"),
+      "FPS_GDP" = c("Crédito sector privado", "% PIB", "Porcentaje del PIB"),
       
-      # === FSI indicators ===
-      "FSANL_PT" = c("Morosidad bancaria", "%", "Porcentaje de préstamos"),
-      "FSERA_PT" = c("ROE bancario", "%", "Retorno sobre capital"),
-      "FSKRC_PT" = c("Ratio de capital regulatorio", "%", "Capital / activos ponderados por riesgo"),
+      # === FSI (Financial Soundness Indicators) v9.0 NUEVO - Como en Narnia ===
+      # Capital
+      "FSANL_PT" = c("Ratio préstamos morosos", "%", "Porcentaje de préstamos totales"),
+      "FSKRC_PT" = c("Capital regulatorio sobre activos pond. riesgo", "%", "Porcentaje"),
+      "FSKT1_PT" = c("Capital Tier 1 sobre activos pond. riesgo", "%", "Porcentaje"),
+      "FSKTA_PT" = c("Capital total sobre activos totales", "%", "Porcentaje"),
+      # Calidad de activos
+      "FSNPL_PT" = c("Préstamos morosos sobre total préstamos", "%", "Porcentaje"),
+      "FSNPLNP_PT" = c("Préstamos morosos netos de provisiones", "%", "Porcentaje"),
+      # Rentabilidad
+      "FSERA_PT" = c("Retorno sobre capital (ROE)", "%", "Porcentaje"),
+      "FSEROA_PT" = c("Retorno sobre activos (ROA)", "%", "Porcentaje"),
+      "FSNIM_PT" = c("Margen de interés neto", "%", "Porcentaje"),
+      # Liquidez
+      "FSLAL_PT" = c("Ratio liquidez (activos líq./total activos)", "%", "Porcentaje"),
+      "FSLALC_PT" = c("Ratio liquidez (activos líq./pasivos c.p.)", "%", "Porcentaje"),
+      "FSCTDL_PT" = c("Depósitos clientes sobre préstamos", "%", "Porcentaje (no interbancarios)"),
+      # Sensibilidad al riesgo de mercado
+      "FSFX_PT" = c("Posición neta abierta en divisas", "%", "Porcentaje del capital"),
       
       # === PRO MEMORIA ===
-      "LP" = c("Población", "mill.", "Millones de personas"),
+      "LP" = c("Población", "personas", "Número total de personas"),
       "PPPPC" = c("PIB per cápita (PPA)", "USD int.", "Dólares internacionales"),
-      "PPPGDP" = c("PIB (PPA)", "mm. USD int.", "Miles de millones de dólares internacionales"),
+      "PPPGDP" = c("PIB (PPA)", "USD int.", "Dólares internacionales (unidad original)"),
       "PPPSH" = c("Participación en PIB mundial", "%", "Porcentaje del PIB mundial (PPA)")
     )
     
     # -------------------------------------------------------------------------
-    # 4. Dataflows disponibles y sus configuraciones
+    # 4. Función auxiliar para generar nombres descriptivos de códigos desconocidos
+    # v9.0: Para que no aparezcan códigos crudos sino descripciones legibles
+    # -------------------------------------------------------------------------
+    generar_nombre_descriptivo <- function(codigo) {
+      # Primero verificar si está en el mapeo
+      if (codigo %in% names(mapeo_indicadores)) {
+        return(mapeo_indicadores[[codigo]][1])
+      }
+      
+      # Patrones comunes de BOP (Balance of Payments)
+      if (grepl("^B", codigo)) {
+        nombre <- dplyr::case_when(
+          grepl("^CAB", codigo) ~ "Cuenta corriente",
+          grepl("^BGS", codigo) ~ "Balanza de bienes y servicios",
+          grepl("^BG$|^BG_", codigo) ~ "Balanza de bienes",
+          grepl("^BS$|^BS_", codigo) ~ "Balanza de servicios",
+          grepl("^BXG", codigo) ~ "Exportaciones de bienes",
+          grepl("^BMG", codigo) ~ "Importaciones de bienes",
+          grepl("^BXS", codigo) ~ "Exportaciones de servicios",
+          grepl("^BMS", codigo) ~ "Importaciones de servicios",
+          grepl("^BXGS", codigo) ~ "Exportaciones de bienes y servicios",
+          grepl("^BMGS", codigo) ~ "Importaciones de bienes y servicios",
+          grepl("^BIP", codigo) ~ "Rentas primarias",
+          grepl("^BIS", codigo) ~ "Rentas secundarias",
+          grepl("^BK", codigo) ~ "Cuenta de capital",
+          grepl("^BF$|^BFA", codigo) ~ "Cuenta financiera",
+          grepl("^BFD", codigo) ~ "Inversión directa",
+          grepl("^BFP", codigo) ~ "Inversión de cartera",
+          grepl("^BFFD", codigo) ~ "Derivados financieros",
+          grepl("^BFO", codigo) ~ "Otra inversión",
+          grepl("^BRA", codigo) ~ "Activos de reserva",
+          grepl("^BEO", codigo) ~ "Errores y omisiones",
+          grepl("^BNIIP", codigo) ~ "Posición inversión internacional neta",
+          TRUE ~ paste0("BOP - ", codigo)
+        )
+        return(nombre)
+      }
+      
+      # Patrones comunes de FSI (Financial Soundness Indicators)
+      if (grepl("^FS", codigo)) {
+        nombre <- dplyr::case_when(
+          grepl("FSKRC", codigo) ~ "Capital regulatorio / activos ponderados riesgo",
+          grepl("FSKT1", codigo) ~ "Tier 1 / activos ponderados riesgo",
+          grepl("FSKTA", codigo) ~ "Capital total / activos totales",
+          grepl("FSANL|FSNPL", codigo) ~ "Préstamos morosos / total préstamos",
+          grepl("FSERA", codigo) ~ "Retorno sobre capital (ROE)",
+          grepl("FSEROA", codigo) ~ "Retorno sobre activos (ROA)",
+          grepl("FSNIM", codigo) ~ "Margen de interés neto",
+          grepl("FSLAL", codigo) ~ "Liquidez (activos líq. / total activos)",
+          grepl("FSLALC", codigo) ~ "Liquidez (activos líq. / pasivos c.p.)",
+          grepl("FSCTDL", codigo) ~ "Depósitos clientes / préstamos",
+          TRUE ~ paste0("FSI - ", codigo)
+        )
+        return(nombre)
+      }
+      
+      # Patrones comunes WEO
+      if (grepl("^NGDP", codigo)) {
+        nombre <- dplyr::case_when(
+          grepl("_RPCH$", codigo) ~ "PIB real (var. %)",
+          grepl("_R$", codigo) ~ "PIB real (nivel)",
+          grepl("PC$|PPC$", codigo) ~ "PIB per cápita",
+          grepl("^NGDPD$", codigo) ~ "PIB nominal (USD)",
+          TRUE ~ paste0("PIB - ", codigo)
+        )
+        return(nombre)
+      }
+      
+      # Patrones de precios
+      if (grepl("^PCPI", codigo)) {
+        nombre <- dplyr::case_when(
+          grepl("PCH$", codigo) ~ "Inflación IPC (var. %)",
+          grepl("EPCH$", codigo) ~ "Inflación fin período",
+          grepl("_IX$|^PCPI$", codigo) ~ "IPC (índice)",
+          TRUE ~ paste0("Precios - ", codigo)
+        )
+        return(nombre)
+      }
+      
+      # Si no hay patrón reconocido, devolver el código
+      return(codigo)
+    }
+    
+    # -------------------------------------------------------------------------
+    # 5. Dataflows disponibles y sus configuraciones
     # -------------------------------------------------------------------------
     # Según diagnóstico:
     # - WEO: COUNTRY (ISO3), INDICATOR, FREQUENCY → Funciona bien
@@ -930,8 +1197,9 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           dplyr::filter(year >= as.integer(anio_inicio) & year <= as.integer(anio_fin)) |>
           dplyr::mutate(
             indicador_codigo = INDICATOR,
+            # v9.0: Usar función para nombres descriptivos
             indicador_nombre = sapply(INDICATOR, function(x) {
-              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][1] else x
+              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][1] else generar_nombre_descriptivo(x)
             }),
             unidad_corta = sapply(INDICATOR, function(x) {
               if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][2] else ""
@@ -979,14 +1247,15 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           dplyr::filter(year >= as.integer(anio_inicio) & year <= as.integer(anio_fin)) |>
           dplyr::mutate(
             indicador_codigo = INDICATOR,
+            # v9.0: Usar función para nombres descriptivos
             indicador_nombre = sapply(INDICATOR, function(x) {
-              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][1] else x
+              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][1] else generar_nombre_descriptivo(x)
             }),
             unidad_corta = sapply(INDICATOR, function(x) {
-              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][2] else ""
+              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][2] else "% PIB pot."
             }),
             unidad_larga = sapply(INDICATOR, function(x) {
-              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][3] else ""
+              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][3] else "Porcentaje del PIB potencial"
             }),
             valor = as.numeric(OBS_VALUE),
             fuente = "FMI (FM)",
@@ -1030,14 +1299,15 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           dplyr::filter(year >= as.integer(anio_inicio) & year <= as.integer(anio_fin)) |>
           dplyr::mutate(
             indicador_codigo = INDICATOR,
+            # v9.0: Usar función para nombres descriptivos de BOP
             indicador_nombre = sapply(INDICATOR, function(x) {
-              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][1] else x
+              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][1] else generar_nombre_descriptivo(x)
             }),
             unidad_corta = sapply(INDICATOR, function(x) {
-              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][2] else ""
+              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][2] else "USD"
             }),
             unidad_larga = sapply(INDICATOR, function(x) {
-              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][3] else ""
+              if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][3] else "Dólares (unidad original)"
             }),
             valor = as.numeric(OBS_VALUE),
             fuente = "FMI (BOP)",
@@ -1131,7 +1401,78 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     })
     
     # -------------------------------------------------------------------------
-    # 9. Consolidar resultados
+    # 9. Descargar FSI (Financial Soundness Indicators) - v9.0 NUEVO
+    # Indicadores de solidez financiera: morosidad, capital, ROE, ROA, liquidez
+    # -------------------------------------------------------------------------
+    tryCatch({
+      datos_fsi <- suppressWarnings({
+        imfapi::imf_get(
+          dataflow_id = "FSI",
+          dimensions = list(REF_AREA = pais_codigo_iso2, FREQ = "A"),
+          start_period = anio_inicio,
+          end_period = anio_fin,
+          progress = FALSE,
+          max_tries = 2
+        )
+      })
+      
+      if (!is.null(datos_fsi) && nrow(datos_fsi) > 0) {
+        # FSI usa REF_AREA con ISO2 y tiene columna INDICATOR
+        col_indicator <- if ("INDICATOR" %in% names(datos_fsi)) "INDICATOR" else "FSI_INDICATOR"
+        
+        if (col_indicator %in% names(datos_fsi)) {
+          datos_fsi <- datos_fsi |>
+            dplyr::mutate(year = as.integer(substr(TIME_PERIOD, 1, 4))) |>
+            dplyr::filter(year >= as.integer(anio_inicio) & year <= as.integer(anio_fin)) |>
+            dplyr::mutate(
+              indicador_codigo = .data[[col_indicator]],
+              # Mapeo completo para FSI con nombres descriptivos en español
+              indicador_nombre = dplyr::case_when(
+                # Capital
+                grepl("FSKRC", .data[[col_indicator]]) ~ "Capital regulatorio sobre activos pond. riesgo",
+                grepl("FSKT1", .data[[col_indicator]]) ~ "Capital Tier 1 sobre activos pond. riesgo",
+                grepl("FSKTA", .data[[col_indicator]]) ~ "Capital total sobre activos totales",
+                # Calidad de activos
+                grepl("FSANL|FSNPL", .data[[col_indicator]]) ~ "Préstamos morosos sobre total préstamos",
+                grepl("FSNPLNP", .data[[col_indicator]]) ~ "Préstamos morosos netos de provisiones",
+                # Rentabilidad
+                grepl("FSERA", .data[[col_indicator]]) ~ "Retorno sobre capital (ROE)",
+                grepl("FSEROA", .data[[col_indicator]]) ~ "Retorno sobre activos (ROA)",
+                grepl("FSNIM", .data[[col_indicator]]) ~ "Margen de interés neto",
+                # Liquidez
+                grepl("FSLAL$", .data[[col_indicator]]) ~ "Ratio liquidez (activos líq./total activos)",
+                grepl("FSLALC", .data[[col_indicator]]) ~ "Ratio liquidez (activos líq./pasivos c.p.)",
+                grepl("FSCTDL", .data[[col_indicator]]) ~ "Depósitos clientes sobre préstamos",
+                # Sensibilidad
+                grepl("FSFX", .data[[col_indicator]]) ~ "Posición neta abierta en divisas",
+                # Si está en mapeo usar ese nombre
+                .data[[col_indicator]] %in% names(mapeo_indicadores) ~ sapply(.data[[col_indicator]], function(x) mapeo_indicadores[[x]][1]),
+                TRUE ~ paste0("FSI - ", .data[[col_indicator]])
+              ),
+              unidad_corta = "%",
+              unidad_larga = "Porcentaje",
+              valor = as.numeric(OBS_VALUE),
+              fuente = "FMI (FSI)",
+              prioridad_fuente = 1,
+              country = pais_codigo_iso3,
+              iso2c = pais_codigo_iso2
+            ) |>
+            dplyr::filter(!is.na(valor)) |>
+            dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
+                          unidad_corta, unidad_larga, valor, fuente, prioridad_fuente)
+          
+          if (nrow(datos_fsi) > 0) {
+            datos_lista[["FSI"]] <- datos_fsi
+            message(paste0("  ✓ FMI (FSI): ", nrow(datos_fsi), " registros"))
+          }
+        }
+      }
+    }, error = function(e) {
+      # FSI no disponible - silenciosamente ignorar
+    })
+    
+    # -------------------------------------------------------------------------
+    # 10. Consolidar resultados
     # -------------------------------------------------------------------------
     if (length(datos_lista) == 0) {
       return(NULL)
@@ -2057,15 +2398,18 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   
   # Función auxiliar para obtener nombre canónico de indicadores equivalentes
   obtener_nombre_canonico <- function(nombre_indicador) {
-    # Mapeo de indicadores equivalentes entre fuentes - v8.0 AMPLIADO
+    # Mapeo de indicadores equivalentes entre fuentes - v9.0 AMPLIADO
     equivalencias <- list(
       "PIB real" = c("PIB real", "PIB real (OCDE)", "PIB real (DBnomics)", "GDP constant prices"),
       "PIB nominal" = c("PIB nominal", "GDP current prices"),
       "Tasa de desempleo" = c("Tasa de desempleo", "Tasa de desempleo (OCDE)", "Tasa de desempleo (DBnomics)", "Desempleo nacional"),
-      "Inflación (IPC)" = c("Inflación (IPC)", "Inflación (OCDE)", "HICP Inflación", "Inflación anual IPC", "Inflación anual (CPI)"),
-      "IPC" = c("IPC (índice)", "IPC general", "IPC (DBnomics)", "CPI_INDEX", "HEADLINE"),
-      "Deuda pública" = c("Deuda pública", "Deuda pública (% PIB)", "Deuda pública bruta"),
-      "Saldo público" = c("Saldo público", "Saldo fiscal (% PIB)", "Saldo fiscal"),
+      "Tasa de empleo" = c("Tasa de empleo", "Ratio empleo-población"),
+      "Tasa de variación interanual del IPC promedio" = c("Tasa de variación interanual del IPC promedio", 
+                                                          "Inflación (IPC)", "Inflación (OCDE)", "HICP Inflación", 
+                                                          "Inflación anual IPC", "Inflación anual (CPI)",
+                                                          "Tasa de variación interanual del IPC promedio (CPI)"),
+      "Deuda pública bruta" = c("Deuda pública", "Deuda pública (% PIB)", "Deuda pública bruta"),
+      "Saldo fiscal" = c("Saldo público", "Saldo fiscal (% PIB)", "Saldo fiscal"),
       "Exportaciones" = c("Exportaciones de bienes y servicios", "Exportaciones de bienes FOB", "Exportaciones", "Exportaciones (OCDE)"),
       "Importaciones" = c("Importaciones de bienes y servicios", "Importaciones de bienes CIF", "Importaciones", "Importaciones (OCDE)"),
       "Cuenta corriente" = c("Balanza por cuenta corriente", "Balanza cuenta corriente", "Cuenta corriente", 
@@ -2121,36 +2465,14 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     return(datos_dedup)
   }
   
-  # Función para normalizar unidades y valores
+  # Función para normalizar unidades y valores - v9.0 SIN CONVERSIONES
+  # Los valores se mantienen en la unidad original de la fuente
   normalizar_valores <- function(datos) {
     if (is.null(datos) || nrow(datos) == 0) return(datos)
     
-    # Usar stringr para detección más robusta en vectores
-    datos <- datos |>
-      dplyr::mutate(
-        # Detectar tipo de unidad
-        es_miles_millones = stringr::str_detect(unidad_corta, stringr::regex("mm\\.", ignore_case = TRUE)),
-        es_millones = stringr::str_detect(unidad_corta, stringr::regex("mill\\.", ignore_case = TRUE)) & !es_miles_millones,
-        es_poblacion_empleo = stringr::str_detect(indicador_nombre, stringr::regex("Población|Empleo|población activa", ignore_case = TRUE)),
-        
-        # Aplicar conversiones
-        valor = dplyr::case_when(
-          # === MILES DE MILLONES (mm.) ===
-          # El WEO devuelve valores en millones de UML, convertir a miles de millones
-          es_miles_millones & abs(valor) > 1e8 ~ valor / 1e6,
-          es_miles_millones & abs(valor) > 1e5 & abs(valor) <= 1e8 ~ valor / 1e3,
-          
-          # === MILLONES (mill.) para población y empleo ===
-          es_millones & es_poblacion_empleo & abs(valor) > 1e6 ~ valor / 1e6,
-          
-          # === MILLONES (mill.) para otros indicadores ===
-          es_millones & abs(valor) > 1e9 ~ valor / 1e6,
-          
-          # Sin cambios para el resto
-          TRUE ~ valor
-        )
-      ) |>
-      dplyr::select(-es_miles_millones, -es_millones, -es_poblacion_empleo)
+    # v9.0: NO se hacen conversiones de unidades
+    # Los valores se mantienen exactamente como vienen de la fuente original
+    # El usuario puede hacer las conversiones manualmente si lo necesita
     
     return(datos)
   }
@@ -2164,7 +2486,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     nombre <- tolower(indicador_nombre)
     codigo <- tolower(indicador_codigo)
     
-    # SECTOR REAL
+    # SECTOR REAL - sin ahorro ni inversión (ahora en sector exterior)
     if (grepl("pib|gdp|producción|producto interior|crecimiento económico", nombre) && 
         !grepl("per cápita|ppa|deflactor", nombre)) {
       return("Sector real")
@@ -2172,17 +2494,19 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     if (grepl("consumo privado|consumo público|consumo hogares|consumo gobierno", nombre)) {
       return("Sector real")
     }
-    if (grepl("formación bruta|inversión total|fbcf|capital fijo", nombre)) {
+    if (grepl("formación bruta|fbcf|capital fijo", nombre)) {
       return("Sector real")
     }
-    if (grepl("ahorro nacional|ahorro bruto", nombre)) {
-      return("Sector real")
-    }
-    if (grepl("valor añadido|agricultura|industria|servicios|construcción", nombre) && 
+    # Oferta (agricultura, industria, servicios)
+    if (grepl("valor añadido|agricultura|industria|servicios|construcción|manufacturas|silvicultura", nombre) && 
         grepl("% pib|porcentaje", nombre, ignore.case = TRUE)) {
       return("Sector real")
     }
-    if (codigo %in% c("ngdp_rpch", "ngdpd", "ngdp", "nid_ngdp", "ngsd_ngdp", "b1gq")) {
+    # Exportaciones netas contribución al crecimiento
+    if (grepl("exportaciones netas|contrib", nombre)) {
+      return("Sector real")
+    }
+    if (codigo %in% c("ngdp_rpch", "ngdpd", "ngdp", "b1gq", "nx_rpch")) {
       return("Sector real")
     }
     
@@ -2190,7 +2514,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     if (grepl("desempleo|unemployment|paro", nombre)) {
       return("Mercado laboral")
     }
-    if (grepl("empleo|employment|ocupación|ocupados|población activa", nombre) && 
+    if (grepl("empleo|employment|ocupación|ocupados|población activa|fuerza laboral", nombre) && 
         !grepl("autoempleo", nombre)) {
       return("Mercado laboral")
     }
@@ -2200,11 +2524,14 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     if (grepl("productividad", nombre) && grepl("trabajo|hora|laboral", nombre)) {
       return("Mercado laboral")
     }
-    if (codigo %in% c("lur", "le", "sl.uem.totl.zs")) {
+    if (codigo %in% c("lur", "le", "le_rpch", "lf", "lf_rpch", "sl.uem.totl.zs", "sl.emp.totl.sp.zs")) {
       return("Mercado laboral")
     }
     
-    # SECTOR EXTERIOR
+    # SECTOR EXTERIOR - incluyendo ahorro e inversión
+    if (grepl("ahorro nacional|inversión total|inversión doméstica", nombre)) {
+      return("Sector exterior")
+    }
     if (grepl("cuenta corriente|current account|balanza corriente", nombre)) {
       return("Sector exterior")
     }
@@ -2229,10 +2556,14 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     if (grepl("reservas internacionales|reservas oficiales", nombre)) {
       return("Sector exterior")
     }
-    if (grepl("^b[a-z]{2,3}_|^cab|^bgs|^bxg|^bmg|^bfa|^bfd|^bfp|^bip|^bis_|^bra", codigo)) {
+    if (grepl("posición de inversión|deuda externa|niip|pii neta", nombre)) {
       return("Sector exterior")
     }
-    if (codigo %in% c("bca_ngdpd", "tx_rpch", "tm_rpch", "reer_bis_broad", "neer_bis_broad")) {
+    if (grepl("^b[a-z]{2,3}_|^cab|^bgs|^bxg|^bmg|^bfa|^bfd|^bfp|^bip|^bis_|^bra|^bniip|^d_ngdpd", codigo)) {
+      return("Sector exterior")
+    }
+    if (codigo %in% c("bca_ngdpd", "tx_rpch", "tm_rpch", "reer_bis_broad", "neer_bis_broad", 
+                      "nid_ngdp", "ngsd_ngdp")) {
       return("Sector exterior")
     }
     
@@ -2262,7 +2593,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     }
     
     # PRECIOS E INDICADORES MONETARIOS
-    if (grepl("inflación|inflation|ipc|cpi|hicp|precios al consumo", nombre)) {
+    if (grepl("variación interanual|ipc|cpi|hicp|precios al consumo", nombre)) {
       return("Precios y monetarios")
     }
     if (grepl("deflactor", nombre)) {
@@ -2278,19 +2609,27 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         grepl("sector privado|bancario|interno", nombre)) {
       return("Precios y monetarios")
     }
-    if (grepl("morosidad|non.?performing|npl|préstamos dudosos", nombre)) {
+    if (grepl("morosidad|non.?performing|npl|préstamos dudosos|préstamos morosos|ratio de préstamos", nombre)) {
       return("Precios y monetarios")
     }
-    if (grepl("roe|roa|rentabilidad bancaria|ratio de capital|solvencia bancaria", nombre)) {
+    if (grepl("roe|roa|rentabilidad bancaria|ratio de capital|solvencia bancaria|retorno sobre", nombre)) {
       return("Precios y monetarios")
     }
-    if (grepl("spread|diferencial|margen de intermediación", nombre)) {
+    if (grepl("spread|diferencial|margen de intermediación|margen de interés", nombre)) {
+      return("Precios y monetarios")
+    }
+    # v9.0: FSI indicators
+    if (grepl("capital regulatorio|capital sobre|tier 1|tier 2|activos ponderados|ratio liquidez|depósitos clientes", nombre)) {
+      return("Precios y monetarios")
+    }
+    if (grepl("fsi|^fs[a-z]{2,}", codigo)) {
       return("Precios y monetarios")
     }
     if (grepl("pcpi|cpi_|headline|core|^ipc", codigo)) {
       return("Precios y monetarios")
     }
-    if (codigo %in% c("pcpipch", "pcpiepch", "ngdp_d", "fpolm_pa", "fitb_pa", "fm2_xdc")) {
+    if (codigo %in% c("pcpipch", "pcpiepch", "ngdp_d", "fpolm_pa", "fitb_pa", "fm2_xdc", 
+                      "fsanl_pt", "fsera_pt", "fskrc_pt", "fskt1_pt", "fslal_pt", "fsctdl_pt", "fseroa_pt")) {
       return("Precios y monetarios")
     }
     
@@ -2779,24 +3118,26 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     # Mercado laboral
     "Tasa de desempleo", "Desempleo juvenil", "Desempleo nacional",
     "Tasa de actividad", "Tasa de empleo",
-    "Ratio empleo-población", "Población activa", "Empleo",
+    "Población activa", "Empleo", "Fuerza laboral",
     "CLU nominales", "Productividad/hora",
     # Sector exterior
     "Media simple del arancel NMF", "Media ponderada del arancel NMF",
     "Cuenta corriente", "Balanza cuenta corriente",
     "Inversión extranjera directa neta",
-    "Deuda externa", "Reservas internacionales",
+    "Deuda externa", "Deuda externa bruta", "Reservas internacionales",
     "Tipo de cambio oficial", "Tipo de cambio USD/EUR",
     "Tipo de cambio efectivo real", "Tipo de cambio efectivo nominal",
+    "Posición de inversión internacional neta",
+    "Ahorro nacional bruto", "Inversión total",
     # Sector público
     "Ingresos públicos", "Gastos públicos", "Gasto público",
     "Recaudación tributaria",
     "Saldo público", "Saldo fiscal", "Saldo primario", "Saldo estructural",
     "Deuda pública", "Deuda pública bruta", "Deuda pública neta",
     # Precios
-    "Inflación (IPC)", "HICP Inflación", "HICP subyacente",
-    "Inflación fin de período", "Deflactor del PIB",
-    "IPC (índice)",
+    "Tasa de variación interanual del IPC promedio", 
+    "Tasa de variación interanual del IPC al final del periodo",
+    "HICP Inflación", "HICP subyacente", "Deflactor del PIB",
     # Monetarios
     "Masa monetaria (M2)", "Agregado monetario M1", "Agregado monetario M2",
     "Crédito al sector privado",
@@ -2828,7 +3169,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   # ============================================================================
   # EXPORTAR A WORD
   # ============================================================================
-
+  
   exportar_a_word <- function(datos_por_categoria, pais_nombre, fecha_inicio, fecha_fin, 
                               archivo_salida, plantilla_word = NULL) {
     
@@ -2899,42 +3240,20 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       font.family = "Aptos"
     )
     
-    # Añadir título principal (con keep_with_next)
-    doc <- doc |>
-      officer::body_add_fpar(
-        officer::fpar(
-          officer::ftext(
-            paste0("DICTAMEN ECONÓMICO SOBRE ", toupper(pais_nombre)),
-            prop = fp_titulo_principal
-          ),
-          fp_p = fp_par_keep
-        )
-      ) |>
-      officer::body_add_par("") |>
-      officer::body_add_fpar(
-        officer::fpar(
-          officer::ftext(
-            paste0("Período: ", lubridate::year(fecha_inicio), "–", lubridate::year(fecha_fin)),
-            prop = fp_normal
-          )
-        )
-      ) |>
-      officer::body_add_par("")
-    
     # Definir estructura de categorías y subcategorías según dictamen de Narnia
     estructura_categorias <- list(
       sector_real = list(
         nombre = "Sector real",
         subcategorias = list(
           list(
-            nombre = "Producción y demanda (variación porcentual interanual, salvo indicación)",
+            nombre = "Producción y demanda",
             patrones = c("PIB", "Consumo", "Formación bruta", "Inversión", "Demanda",
-                         "Exportaciones netas", "Ahorro")
+                         "Exportaciones netas", "contrib")
           ),
           list(
-            nombre = "Oferta (% del PIB)",
+            nombre = "Oferta",
             patrones = c("Agricultura", "Industria", "Servicios", "VAB", "valor añadido",
-                         "Manufacturas", "Construcción")
+                         "Manufacturas", "Construcción", "silvicultura")
           ),
           list(
             nombre = "Output potencial",
@@ -2948,10 +3267,10 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           list(
             nombre = "Indicadores principales",
             patrones = c("desempleo", "Desempleo", "empleo", "Empleo", "actividad", 
-                         "Población activa", "Ratio empleo", "participación", "Fuerza laboral")
+                         "Población activa", "Tasa de empleo", "participación", "Fuerza laboral")
           ),
           list(
-            nombre = "Costes laborales (% del PIB)",
+            nombre = "Costes laborales",
             patrones = c("Remuneración", "gastos de personal", "CLU", "Productividad", 
                          "productividad", "Coste", "salario")
           )
@@ -2965,23 +3284,29 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
             patrones = c("arancel", "Arancel", "NMF")
           ),
           list(
-            nombre = "Balanza de Pagos (miles de millones de euros)",
+            nombre = "Balanza de Pagos (mm. USD o mm. EUR)",
+            patrones_unidad = c("mm. USD", "mm. EUR", "USD", "EUR"),
             patrones = c("Cuenta corriente", "Balanza de bienes", "Exportaciones de bienes",
-                         "Importaciones de bienes", "Balanza de rentas", "Cuenta de capital",
-                         "Cuenta financiera", "Inversión directa", "Inversión de cartera",
-                         "Derivados", "Otra inversión", "Activos de reserva", "Errores")
+                         "Importaciones de bienes", "Balanza de rentas", "Rentas primarias",
+                         "Rentas secundarias", "Cuenta de capital", "Cuenta financiera", 
+                         "Inversión directa", "Inversión de cartera", "Derivados", 
+                         "Otra inversión", "Activos de reserva", "Errores")
           ),
           list(
             nombre = "Balanza de Pagos (% del PIB)",
-            patrones = c("% del PIB", "% PIB")
+            patrones_unidad = c("% PIB", "% del PIB"),
+            patrones = c("Cuenta corriente", "Balanza de bienes", "Balanza de servicios",
+                         "Rentas primarias", "Rentas secundarias", "Cuenta de capital",
+                         "Cuenta financiera", "Inversión directa", "Inversión de cartera",
+                         "Otra inversión", "Errores")
           ),
           list(
-            nombre = "Posición Internacional y Deuda (% del PIB)",
-            patrones = c("Posición de inversión", "Deuda externa", "PIIN", "PII neta")
+            nombre = "Posición Internacional y Deuda",
+            patrones = c("Posición de inversión", "Deuda externa", "PIIN", "PII neta", "NIIP")
           ),
           list(
             nombre = "Ahorro e inversión",
-            patrones = c("Ahorro nacional", "Inversión doméstica")
+            patrones = c("Ahorro nacional", "Inversión total", "Inversión doméstica")
           )
         )
       ),
@@ -2989,17 +3314,17 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         nombre = "Sector público",
         subcategorias = list(
           list(
-            nombre = "Ingresos y gastos (% del PIB)",
-            patrones = c("Ingresos totales", "Impuestos", "Contribuciones sociales",
-                         "Subvenciones", "Otros ingresos", "Gastos totales", "Remuneración",
-                         "Uso de bienes", "Consumo de capital", "Intereses", "Subsidios",
-                         "Beneficios sociales", "Otros gastos")
+            nombre = "Ingresos y gastos",
+            patrones = c("Ingresos públicos", "Ingresos totales", "Impuestos", "Contribuciones sociales",
+                         "Subvenciones", "Otros ingresos", "Gastos públicos", "Gastos totales", 
+                         "Remuneración", "Uso de bienes", "Consumo de capital", "Intereses", 
+                         "Subsidios", "Beneficios sociales", "Otros gastos", "Recaudación")
           ),
           list(
-            nombre = "Balances y Deuda (% del PIB)",
+            nombre = "Balances y deuda",
             patrones = c("Balance fiscal", "Balance primario", "Balance estructural",
                          "Saldo público", "Saldo fiscal", "Saldo primario", "Saldo estructural",
-                         "Deuda pública", "Déficit")
+                         "Deuda pública", "Déficit", "Deuda neta")
           )
         )
       ),
@@ -3007,14 +3332,15 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         nombre = "Precios y costes",
         subcategorias = list(
           list(
-            nombre = "Precios y costes",
-            patrones = c("IPC", "HICP", "Inflación", "Deflactor", "precios")
+            nombre = "Precios",
+            patrones = c("IPC", "HICP", "variación interanual", "Deflactor")
           ),
           list(
             nombre = "Indicadores monetarios y financieros",
-            patrones = c("Crédito", "capital regulatorio", "préstamos morosos", 
-                         "liquidez", "Tier", "ROA", "ROE", "Retorno", "Depósitos",
-                         "bancario", "interés", "monetaria")
+            patrones = c("Crédito", "Capital regulatorio", "préstamos morosos", "Ratio de préstamos",
+                         "Ratio liquidez", "Ratio de liquidez", "Tier", "ROA", "ROE", "Retorno sobre", 
+                         "Depósitos clientes", "bancario", "interés", "monetaria", "Capital sobre",
+                         "Préstamos morosos")
           )
         )
       ),
@@ -3546,12 +3872,15 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
             layout_columns(
               col_widths = c(4, 2, 2, 4),
               
-              selectInput(
-                "pais",
-                label = tags$span(icon("flag"), " País:"),
-                choices = NULL,
-                selected = NULL,
-                width = "100%"
+              div(
+                selectInput(
+                  "pais",
+                  label = tags$span(icon("flag"), " País:"),
+                  choices = NULL,
+                  selected = NULL,
+                  width = "100%"
+                ),
+                uiOutput("enlace_fmi_pais")
               ),
               
               numericInput(
@@ -3644,14 +3973,18 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           col_widths = c(6, 6),
           class = "mb-4",
           
-          downloadButton("btn_exportar_word",
+          shinyjs::disabled(
+            downloadButton("btn_exportar_word",
                            label = span(class = "btn-text", icon("file-word"), " Exportar a Word"),
                            class = "btn-warning btn-lg w-100 py-3 btn-export"
-                         ),
+            )
+          ),
           
-          downloadButton("btn_exportar_excel",
-                         label = tagList(icon("file-excel"), " Exportar a Excel"),
-                         class = "btn-success btn-lg w-100 py-3")
+          shinyjs::disabled(
+            downloadButton("btn_exportar_excel",
+                           label = tagList(icon("file-excel"), " Exportar a Excel"),
+                           class = "btn-success btn-lg w-100 py-3")
+          )
         )
       )
     ),
@@ -4003,6 +4336,99 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
               tags$li(tags$strong("Banco Mundial:"), " World Development Indicators (WDI) - amplia cobertura de países"),
               tags$li(tags$strong("OMC:"), " Datos arancelarios de la Organización Mundial del Comercio"),
               tags$li(tags$strong("BIS:"), " Tipos de cambio efectivos del Bank for International Settlements")
+            ),
+            
+            hr(),
+            
+            # NUEVA SECCIÓN: Notas para la preparación del examen
+            h5(icon("file-word"), " Notas para la preparación del ejercicio con el documento Word:"),
+            
+            div(
+              class = "alert alert-info",
+              style = "background-color: #e8f4fc; border-color: #2B579A; border-left: 4px solid #2B579A; color: #000000;",
+              
+              tags$p(
+                style = "color: #000000;",
+                tags$strong(icon("exclamation-triangle"), " Limitaciones de la descarga automática:"),
+                " Los datos se descargan de forma automática desde diversas fuentes internacionales. ",
+                "Es imprescindible realizar una ", tags$strong("revisión exhaustiva"), 
+                " de la coherencia de los datos antes de utilizar el documento para preparar el ejercicio.",
+                " Algunas variables pueden requerir ajustes manuales, especialmente:"
+              ),
+              
+              tags$ul(
+                style = "color: #000000;",
+                tags$li("Conversión de unidades (p. ej., expresar magnitudes en millones)."),
+                tags$li("Verificación de la consistencia temporal de las series."),
+                tags$li("Corrección de posibles valores atípicos o errores de fuente.")
+              ),
+              
+              hr(),
+              
+              tags$p(
+                style = "color: #000000;",
+                tags$strong(icon("filter"), " Selección de variables:"),
+                " El documento descargado incluye un amplio conjunto de indicadores. ",
+                "Para preparar el ejercicio, es necesario ", tags$strong("seleccionar las variables más relevantes"),
+                " para el análisis del país y eliminar aquellas que no aporten información significativa."
+              ),
+              
+              hr(),
+              
+              tags$p(
+                style = "color: #000000;",
+                tags$strong(icon("exchange-alt"), " Tipos de cambio:"),
+                " En el caso de las variables relativas al tipo de cambio, se debe revisar si ",
+                "un ", tags$strong("aumento del índice representa una apreciación o depreciación"),
+                " de la moneda local. Esto depende de cómo esté definido el indicador en cada fuente:"
+              ),
+              
+              tags$ul(
+                style = "color: #000000;",
+                tags$li(tags$strong("Tipo de cambio nominal (UML/USD):"), " Un aumento indica depreciación de la moneda local."),
+                tags$li(tags$strong("REER/NEER (índices):"), " Un aumento generalmente indica apreciación real/nominal.")
+              ),
+              
+              hr(),
+              
+              tags$p(
+                style = "color: #000000;",
+                tags$strong(icon("chart-area"), " Complementar con gráficos del FMI:"),
+                " Se recomienda encarecidamente consultar la ", 
+                tags$strong("última consulta del Artículo IV del FMI"), 
+                " para el país seleccionado. Estos informes contienen gráficos y análisis ",
+                "que complementan las tablas de datos y facilitan la comprensión de la situación económica."
+              ),
+              
+              tags$p(
+                style = "margin-top: 0.5rem;",
+                tags$a(
+                  href = "https://www.imf.org/en/Publications/SPROLLs/Article-iv-staff-reports",
+                  target = "_blank",
+                  class = "btn btn-sm",
+                  style = "background-color: transparent; color: #000000; border: 2px solid #5F2987; transition: all 0.3s ease;",
+                  onmouseover = "this.style.backgroundColor='#5F2987'; this.style.color='#E2EFD9'; this.style.fontWeight='bold';",
+                  onmouseout = "this.style.backgroundColor='transparent'; this.style.color='#000000'; this.style.fontWeight='normal';",
+                  icon("external-link-alt"), " Consultas Artículo IV del FMI"
+                )
+              ),
+              
+              hr(),
+              
+              tags$p(
+                style = "color: #000000;",
+                tags$strong(icon("edit"), " Adaptar las preguntas:"),
+                " Una vez seleccionados los datos y realizado un análisis preliminar de la situación económica del país, ",
+                "es necesario ", tags$strong("adaptar las preguntas del ejercicio"), 
+                " a las particularidades del país elegido, considerando:"
+              ),
+              
+              tags$ul(
+                style = "color: #000000;",
+                tags$li("Los principales desequilibrios macroeconómicos identificados."),
+                tags$li("El contexto económico y geopolítico relevante."),
+                tags$li("Las recomendaciones de política económica más pertinentes.")
+              )
             )
           )
         )
@@ -4024,6 +4450,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     resumen_fuentes <- reactiveVal(NULL)
     es_pais_ue <- reactiveVal(TRUE)
     es_pais_ocde <- reactiveVal(TRUE)  # NUEVO v8.0
+    iso3_actual <- reactiveVal("")  # Código ISO3 del país actual
     
     # Cargar lista de países al iniciar
     observe({
@@ -4038,6 +4465,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       )
     })
     
+    # Habilitar/deshabilitar botones según haya datos
     observe({
       if (is.null(datos_por_categoria()) || length(datos_por_categoria()) == 0) {
         shinyjs::disable("btn_exportar_word")
@@ -4054,16 +4482,19 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       iso2 <- input$pais
       bandera_actual(paste0("https://flagcdn.com/w160/", tolower(iso2), ".png"))
       
-      # Verificar si el país es de la UE para Eurostat
-      pais_en_ue <- iso2 %in% paises_ue
-      es_pais_ue(pais_en_ue)
-      
-      # Verificar si el país es de la OCDE (NUEVO v8.0)
+      # Obtener y guardar código ISO3
       pais_iso3 <- if (iso2 %in% names(mapeo_iso2_iso3)) {
         mapeo_iso2_iso3[iso2]
       } else {
         tryCatch(countrycode::countrycode(iso2, "iso2c", "iso3c"), error = function(e) NULL)
       }
+      iso3_actual(pais_iso3)
+      
+      # Verificar si el país es de la UE para Eurostat
+      pais_en_ue <- iso2 %in% paises_ue
+      es_pais_ue(pais_en_ue)
+      
+      # Verificar si el país es de la OCDE (NUEVO v8.0)
       pais_en_ocde <- !is.null(pais_iso3) && pais_iso3 %in% paises_ocde
       es_pais_ocde(pais_en_ocde)
       
@@ -4151,14 +4582,73 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       updateCheckboxGroupInput(session, "fuentes_datos", selected = character(0))
     })
     
-    # Renderizar la bandera
+    # Renderizar la bandera como enlace a la página del país en el FMI
     output$bandera_pais <- renderUI({
       req(bandera_actual())
-      tags$img(
-        src = bandera_actual(),
-        height = "80px",
-        style = "border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"
+      
+      iso3 <- iso3_actual()
+      
+      # Si no hay ISO3, mostrar solo la imagen sin enlace
+      if (is.null(iso3) || iso3 == "") {
+        return(
+          tags$img(
+            src = bandera_actual(),
+            height = "80px",
+            style = "border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"
+          )
+        )
+      }
+      
+      # URL de la página del país en el FMI
+      url_destino <- paste0("https://www.imf.org/en/countries/", tolower(iso3))
+      
+      tags$a(
+        href = url_destino,
+        target = "_blank",
+        title = "Abrir página del país en el FMI",
+        style = "cursor: pointer; display: inline-block; transition: transform 0.2s ease;",
+        onmouseover = "this.style.transform='scale(1.05)';",
+        onmouseout = "this.style.transform='scale(1)';",
+        tags$img(
+          src = bandera_actual(),
+          height = "80px",
+          style = "border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"
+        )
       )
+    })
+    
+    # Renderizar enlace a la página del país en el FMI
+    output$enlace_fmi_pais <- renderUI({
+      req(input$pais)
+      iso2 <- input$pais
+      
+      # Obtener código ISO3 en minúsculas
+      paises <- obtener_lista_paises()
+      match_idx <- which(paises$iso2c == iso2)
+      
+      if (length(match_idx) > 0) {
+        iso3 <- tolower(paises$iso3c[match_idx])
+      } else if (iso2 %in% names(mapeo_iso2_iso3)) {
+        iso3 <- tolower(mapeo_iso2_iso3[iso2])
+      } else {
+        iso3 <- tryCatch(
+          tolower(countrycode::countrycode(iso2, "iso2c", "iso3c")),
+          error = function(e) NULL
+        )
+      }
+      
+      if (!is.null(iso3) && nchar(iso3) == 3) {
+        url_fmi <- paste0("https://www.imf.org/en/countries/", iso3)
+        tags$a(
+          href = url_fmi,
+          target = "_blank",
+          class = "small",
+          style = "color: #5F2987; text-decoration: none; display: inline-block; margin-top: 5px;",
+          onmouseover = "this.style.color='#5F2987'; this.style.textDecoration='underline';",
+          onmouseout = "this.style.color='#5F2987'; this.style.textDecoration='none';",
+          icon("external-link-alt"), " Ver país en el FMI"
+        )
+      }
     })
     
     # Resumen de descarga
@@ -4356,7 +4846,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       DT::datatable(
         datos_df,
         options = list(
-          pageLength = 15,
+          pageLength = 25,
           scrollX = TRUE,
           dom = 'Bfrtip',
           language = list(
@@ -4364,7 +4854,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           )
         ),
         rownames = FALSE,
-        class = "table table-striped table-hover"
+        class = "table table-hover"
       )
     }
     
