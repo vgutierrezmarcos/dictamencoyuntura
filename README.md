@@ -1,12 +1,11 @@
 <div align="center">
 
-# 📊 Dictamen de Coyuntura Económica
+# 📊 Obtención de datos para el dictamen de coyuntura
 
-### Herramienta de Preparación para Opositores a Técnico Comercial y Economista del Estado
+### Herramienta de preparación para Opositores a Técnico Comercial y Economista del Estado
 
 [![R](https://img.shields.io/badge/R-276DC3?style=for-the-badge&logo=r&logoColor=white)](https://www.r-project.org/)
 [![Shiny](https://img.shields.io/badge/Shiny-0077B5?style=for-the-badge&logo=rstudio&logoColor=white)](https://shiny.rstudio.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 **Una aplicación Shiny integral para la descarga, análisis y exportación de datos macroeconómicos de fuentes internacionales**
 
@@ -25,15 +24,13 @@
 ## 📖 Índice
 
 - [Descripción](#-descripción)
-- [Características Principales](#-características-principales)
-- [Fuentes de Datos](#-fuentes-de-datos)
+- [Características principales](#-características-principales)
+- [Fuentes de datos](#-fuentes-de-datos)
 - [Instalación](#-instalación)
-- [Guía de Uso](#-guía-de-uso)
-- [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Guía de uso](#-guía-de-uso)
+- [Estructura del proyecto](#-estructura-del-proyecto)
 - [Ejemplos](#-ejemplos)
-- [Novedades v9.1](#-novedades-en-versión-91)
 - [Contribuir](#-contribuir)
-- [Licencia](#-licencia)
 - [Contacto](#-contacto)
 
 ---
@@ -50,13 +47,13 @@ La aplicación permite a los opositores:
 - 🌍 **Seleccionar cualquier país** del mundo con datos disponibles
 - ⏱️ **Ahorrar tiempo** en la recopilación de datos, permitiendo centrarse en el análisis económico
 
-### 🎓 Contexto del Examen
+### 🎓 Contexto del examen
 
-El **dictamen de coyuntura económica** es la segunda parte del primer ejercicio de las oposiciones. Los candidatos disponen de **1 hora y 45 minutos** para:
+El **dictamen de coyuntura económica** es la segunda parte del primer ejercicio de las oposiciones. Los candidatos deben:
 
 1. Analizar datos macroeconómicos suministrados
 2. Redactar un dictamen económico coherente y bien fundamentado
-3. Defender posteriormente el dictamen ante el tribunal durante 15 minutos
+3. Defender posteriormente el dictamen ante el tribunal
 
 Esta aplicación simula el tipo de cuadros macroeconómicos que podrían aparecer en el examen, facilitando la práctica y preparación.
 
@@ -64,97 +61,77 @@ Esta aplicación simula el tipo de cuadros macroeconómicos que podrían aparece
 
 ## ✨ Características Principales
 
-### 🔄 Descarga Automatizada de Datos
+### 🔄 Descarga automatizada de datos
 
-- Integración con **7 fuentes internacionales** de prestigio
-- Descarga paralela optimizada para reducir tiempos de espera
-- Sistema robusto de gestión de errores
-- Caché inteligente para evitar descargas duplicadas
+- Integración con **7 fuentes internacionales**
+- Descarga optimizada para reducir tiempos de espera
 
-### 📑 Organización por Categorías Económicas
+### 📑 Organización por categorías económicas
 
-Los indicadores se agrupan según las categorías estándar del análisis económico:
+Los indicadores se agrupan según las siguientes categorías:
 
-| Categoría | Subcategorías |
-|-----------|---------------|
-| **Sector Real** | PIB, Crecimiento, Output Gap, Oferta |
-| **Mercado Laboral** | Empleo, Desempleo, Participación, Productividad |
-| **Sector Exterior** | Exportaciones, Importaciones, Balanza de Pagos, Competitividad |
-| **Sector Público** | Ingresos, Gastos, Balances, Deuda |
-| **Precios y Costes** | Inflación IPC, Deflactor PIB |
-| **Indicadores Monetarios y Financieros** | Tipos de interés, Agregados monetarios, Indicadores financieros |
-| **Pro-memoria** | Población, PIB per cápita, Tipo de cambio |
+| Categoría |
+|-----------|
+| **Sector real** |
+| **Mercado laboral** |
+| **Sector exterior** |
+| **Sector público** |
+| **Precios y costes** |
+| **Indicadores monetarios y financieros** |
+| **Pro-memoria** |
 
-### 📤 Exportación Profesional
+### 📤 Exportación de datos
 
 #### 📄 Exportación a Word
-- Formato compatible con plantilla oficial del Ministerio
-- Fuente Aptos (estándar oficial)
-- Tablas formateadas con colores institucionales
-- Estructura lista para análisis económico
+- Formato compatible con plantilla habitual utilizada en el examen
+- No indica el país seleccionado en este archivo
 
 #### 📊 Exportación a Excel
 - Múltiples hojas organizadas por categoría
-- Formato condicional para facilitar lectura
 - Metadatos completos (fuente, indicador, unidades)
-- Gráficos automáticos de evolución temporal
 
-### 🎨 Interfaz Intuitiva
+### 🎨 Interfaz
 
-- **Diseño responsive** adaptado a diferentes tamaños de pantalla
-- **Colores institucionales** del Ministerio de Economía (#5F2987 púrpura, #E2EFD9 verde claro)
-- **Banderas de países** para identificación visual
-- **Tooltips informativos** con descripciones de cada indicador
-- **Número formateado en español** (coma decimal, punto de miles)
+- **Diseño sencillo y visual**. Incluye las banderas de los países para identificación visual e indica el número de indicadores descargados.
 
 ---
 
-## 🌐 Fuentes de Datos
+## 🌐 Fuentes de datos
 
 La aplicación integra datos de las siguientes fuentes internacionales:
 
-| Fuente | Descripción | Indicadores Principales |
+| Fuente | Descripción | Indicadores principales |
 |--------|-------------|-------------------------|
 | 🏦 **FMI** | Fondo Monetario Internacional | WEO, BOP, FSI, IFS, CPI |
 | 🇪🇺 **Eurostat** | Oficina Estadística de la UE | Datos de países de la Unión Europea |
-| 🌍 **OCDE** | Organización para la Cooperación y el Desarrollo Económicos | Indicadores de países desarrollados |
+| 🌍 **OCDE** | Organización para la Cooperación y el Desarrollo Económicos | Indicadores de países miembros |
 | 🌎 **Banco Mundial** | World Development Indicators | Datos globales de desarrollo |
 | 🏪 **OMC** | Organización Mundial del Comercio | Comercio internacional |
 | 💰 **BIS** | Banco de Pagos Internacionales | Tipos de cambio efectivos |
 | 📈 **DBnomics** | Base de datos económica agregada | Datos macroeconómicos adicionales |
 
-### 🔐 Sistema de Priorización
-
-Cuando varios indicadores similares están disponibles de diferentes fuentes, la aplicación aplica una jerarquía de prioridad:
-
-**FMI** > **Eurostat** > **Banco Mundial** > **OMC** > **BIS** > **OCDE** > **DBnomics**
-
-Esto garantiza que siempre se utilicen los datos de mayor calidad y más oficiales.
 
 ---
 
 ## 🚀 Instalación
 
-### Requisitos Previos
+### Requisitos previos
 
 - **R** versión ≥ 4.0.0 ([Descargar R](https://cran.r-project.org/))
 - **RStudio** (recomendado) ([Descargar RStudio](https://posit.co/download/rstudio-desktop/))
 - Conexión a Internet para descargar datos
 
-### Paso 1: Clonar el Repositorio
+### Paso 1: Clonar el repositorio
 
 ```bash
-# Opción 1: HTTPS
+# Clonar desde GitHub (desde la terminal de RStudio)
 git clone https://github.com/vgutierrezmarcos/dictamencoyuntura.git
-
-# Opción 2: SSH
-git clone git@github.com:vgutierrezmarcos/dictamencoyuntura.git
 
 # Navegar al directorio
 cd dictamencoyuntura
 ```
 
-### Paso 2: Instalar Dependencias
+### Paso 2: Instalar dependencias
 
 La aplicación **instalará automáticamente** todos los paquetes necesarios la primera vez que se ejecute. Los paquetes que se instalarán son:
 
@@ -177,60 +154,29 @@ DT, httr, readxl, countrycode
 
 **Nota**: La instalación automática puede tardar **5-10 minutos** en la primera ejecución.
 
-### Paso 3 (Opcional): Instalación Manual de Paquetes
-
-Si prefieres instalar los paquetes manualmente antes de ejecutar la aplicación:
-
-```r
-# Instalar devtools si no lo tienes
-install.packages("devtools")
-
-# Instalar el paquete desde el repositorio local
-devtools::install(".", dependencies = TRUE)
-```
-
 ---
 
-## 📘 Guía de Uso
+## 📘 Guía de uso
 
-### Inicio Rápido
-
-#### Opción 1: Desde RStudio
+### Inicio rápido
 
 ```r
 # Abrir el proyecto en RStudio
 # Archivo > Abrir Proyecto > dictamencoyuntura.Rproj
 
 # Cargar el paquete
-library(dictamencoyuntura)
+devtools::load_all()
 
 # Lanzar la aplicación
 dictamencoyuntura_app()
-```
 
-#### Opción 2: Desde consola de R
-
-```r
-# Establecer directorio de trabajo
-setwd("ruta/a/dictamencoyuntura")
-
-# Cargar el paquete
-library(dictamencoyuntura)
-
-# Lanzar la aplicación
-dictamencoyuntura_app()
-```
-
-#### Opción 3: Con directorio de salida personalizado
-
-```r
-# Especificar dónde guardar las exportaciones
+# De manera opcional puedes especificar en qué carpeta quieres guardar las exportaciones
 dictamencoyuntura_app(output_dir = "mis_exportaciones")
 ```
 
-### 🎮 Uso de la Interfaz
+### 🎮 Uso de la interfaz
 
-#### 1️⃣ **Selección del País**
+#### 1️⃣ **Selección del país**
 
 <div align="center">
 
@@ -254,18 +200,15 @@ dictamencoyuntura_app(output_dir = "mis_exportaciones")
 ```
 ┌────────────────┬────────────────┐
 │  Año inicial   │   Año final    │
-│    [2015  ]    │    [2024  ]    │
+│    [2020  ]    │    [2028  ]    │
 └────────────────┴────────────────┘
 ```
 
 </div>
 
 - Selecciona el rango temporal de interés
-- Recomendado: **10 años** para análisis de ciclo completo
 
-#### 3️⃣ **Selección de Fuentes de Datos**
-
-<div align="center">
+#### 3️⃣ **Selección de fuentes de datos**
 
 ```
 ☑ FMI (Fondo Monetario Internacional)
@@ -277,13 +220,11 @@ dictamencoyuntura_app(output_dir = "mis_exportaciones")
 ☑ DBnomics
 ```
 
-</div>
-
 - Por defecto, todas las fuentes están seleccionadas
 - **Eurostat** se desactiva automáticamente para países fuera de la UE
 - **OCDE** se desactiva para países no miembros
 
-#### 4️⃣ **Descarga de Datos**
+#### 4️⃣ **Descarga de datos**
 
 <div align="center">
 
@@ -300,13 +241,12 @@ dictamencoyuntura_app(output_dir = "mis_exportaciones")
 - Barra de progreso mostrará el avance
 - Tiempo estimado: **30 segundos - 2 minutos** según fuentes seleccionadas
 
-#### 5️⃣ **Visualización de Resultados**
+#### 5️⃣ **Visualización derResultados**
 
 La aplicación organiza los datos en pestañas:
 
-- **📊 Por Categoría**: Datos agrupados por temas económicos
-- **🔍 Datos Completos**: Todos los indicadores con metadatos
-- **📈 Resumen de Fuentes**: Estadísticas de cobertura por fuente
+- **📊 Por categoría**: Datos agrupados por temas económicos
+- **📈 Resumen de fuentes**: Estadísticas de cobertura por fuente
 
 #### 6️⃣ **Exportación**
 
@@ -321,13 +261,13 @@ La aplicación organiza los datos en pestañas:
 
 </div>
 
-Los archivos se guardan en la carpeta `output/` con nomenclatura:
+Los archivos se guardan (por defecto en la carpeta `output/`) con nomenclatura:
 - Word: `Dictamen_ES_20260103.docx`
 - Excel: `Dictamen_ES_20260103.xlsx`
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📁 Estructura del proyecto
 
 ```
 dictamencoyuntura/
@@ -338,130 +278,38 @@ dictamencoyuntura/
 ├── 📄 .gitignore                          # Archivos ignorados por Git
 │
 ├── 📂 R/                                  # Código fuente R
-│   ├── app_dictamenes_economicos.R        # Aplicación principal Shiny
-│   ├── download_functions.R               # Funciones de descarga
-│   ├── export_functions.R                 # Funciones de exportación
-│   └── utilities.R                        # Utilidades auxiliares
+│   └── app_dictamenes_economicos.R        # Aplicación principal Shiny
 │
 ├── 📂 templates/                          # Plantillas de exportación
-│   └── Plantilla_Ejercicios_Dictamen.dotx # Plantilla Word oficial
-│
-├── 📂 data/                               # Datos de referencia
-│   ├── paises.csv                         # Lista de países
-│   └── categorias.csv                     # Categorías de indicadores
+│   └── Plantilla_Ejercicios_Dictamen.dotx # Plantilla Word
 │
 ├── 📂 man/                                # Documentación de funciones
 │   └── dictamencoyuntura_app.Rd
 │
-├── 📂 inst/                               # Archivos instalables
-│   └── extdata/                           # Datos adicionales
-│
-├── 📂 output/                             # Exportaciones (se crea al ejecutar)
-│   ├── Dictamen_ES_20260103.docx
-│   └── Dictamen_ES_20260103.xlsx
-│
-├── 📂 docs/                               # Documentación adicional
-│   ├── Esquema_dictamen_económico.pdf     # Guía del examen
-│   ├── Ejemplo_Narnia.pdf                 # Examen resuelto ejemplo
-│   └── Guía_solución.pdf                  # Esquema de solución
-│
-└── 📂 examples/                           # Ejemplos de uso
-    └── ejemplo_uso_basico.R
+└── 📂 output/                             # Exportaciones (se crea al ejecutar)
+    ├── Dictamen_ES_20260103.docx
+    └── Dictamen_ES_20260103.xlsx
 ```
 
 ---
 
-## 💡 Ejemplos
+## 💡 Ejemplo de uso
 
-### Ejemplo 1: Análisis de España (2015-2024)
+### Ejemplo: Análisis de Brasil (2015-2024)
 
 ```r
-library(dictamencoyuntura)
+devtools::load_all()
 
 # Lanzar aplicación
 dictamencoyuntura_app()
 
 # En la interfaz:
-# 1. Seleccionar "España" 
+# 1. Seleccionar "Brasil" 
 # 2. Período: 2015 - 2024
 # 3. Todas las fuentes seleccionadas
 # 4. Clic en "Descargar Datos"
 # 5. Exportar a Word y Excel
 ```
-
-**Resultado**: Análisis completo del ciclo económico español post-crisis financiera hasta la actualidad.
-
-### Ejemplo 2: Comparación de Países Emergentes
-
-```r
-# Analizar Brasil
-dictamencoyuntura_app()
-# ... configurar para Brasil, descargar y exportar
-
-# Analizar India
-dictamencoyuntura_app()
-# ... configurar para India, descargar y exportar
-
-# Comparar los archivos Excel resultantes
-```
-
-### Ejemplo 3: Uso Programático (Avanzado)
-
-```r
-# Para usuarios avanzados que deseen usar las funciones directamente
-library(dictamencoyuntura)
-
-# Descargar datos del FMI para España
-datos_fmi <- descargar_datos_fmi(
-  pais = "ES",
-  fecha_inicio = as.Date("2015-01-01"),
-  fecha_fin = as.Date("2024-12-31")
-)
-
-# Exportar directamente a Excel sin interfaz
-exportar_a_excel(
-  datos_categorizados = datos_fmi,
-  pais_nombre = "España",
-  archivo_salida = "mi_analisis_españa.xlsx"
-)
-```
-
----
-
-## 🆕 Novedades en Versión 9.1
-
-### ✅ Nuevos Indicadores
-
-| Categoría | Indicador | Fuente |
-|-----------|-----------|--------|
-| **Sector Real** | Output gap (% PIB potencial) | FMI |
-| **Sector Real** | Exportaciones netas (contribución al crecimiento) | FMI |
-| **Oferta** | Valor añadido bruto por sectores | FMI |
-| **Mercado Laboral** | Variación % empleo y fuerza laboral | FMI |
-| **Sector Exterior** | Balanza de pagos (% PIB) | FMI |
-| **Sector Exterior** | Posición inversión internacional neta (NIIP, % PIB) | FMI |
-| **Sector Exterior** | Deuda externa bruta (% PIB) | FMI |
-
-### 🔄 Mejoras y Modificaciones
-
-- ✅ Reorganización del sector público en "Ingresos y gastos" y "Balances y deuda"
-- ✅ Nomenclatura actualizada de inflación: "Tasa de variación interanual del IPC"
-- ✅ Ahorro e inversión movidos a Sector Exterior para mejor coherencia analítica
-- ✅ "Ratio empleo-población" renombrado a "Tasa de empleo"
-- ✅ Eliminados índices de precios (solo variaciones porcentuales)
-- ✅ Subcategorías sin unidades en los títulos para mayor claridad
-
-### 🗑️ Indicadores Eliminados
-
-- ❌ PIB nominal en USD del Banco Mundial (disponible en FMI)
-- ❌ PIB nominal fiscal en moneda local
-
-### 🐛 Correcciones de Bugs
-
-- ✅ Compatibilidad mejorada con API SDMX 3.0 del FMI
-- ✅ Gestión de códigos ISO2/ISO3 en diferentes bases de datos
-- ✅ Corrección de errores en datos de Eurostat para países pequeños
-- ✅ Mejor manejo de valores nulos en exportaciones
 
 ---
 
@@ -484,56 +332,15 @@ Abre un [issue](https://github.com/vgutierrezmarcos/dictamencoyuntura/issues) de
 - Justificación (¿por qué sería útil?)
 - Ejemplos de uso
 
-### 🔧 Pull Requests
-
-1. **Fork** el repositorio
-2. Crea una **rama** para tu funcionalidad (`git checkout -b feature/nueva-funcionalidad`)
-3. **Commit** tus cambios (`git commit -am 'Añade nueva funcionalidad'`)
-4. **Push** a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abre un **Pull Request**
-
-### 📝 Guía de Estilo
-
-- Código en **español** (nombres de variables, funciones, comentarios)
-- Usar **tidyverse** para manipulación de datos
-- Documentar funciones con **roxygen2**
-- Incluir **ejemplos** en la documentación
 
 ---
 
-## 📋 Roadmap
+## 🔮 Roadmap
 
-### 🎯 Versión 10.0 (Planificada)
+###  Futuras mejoras
 
-- [ ] **Gráficos interactivos** con plotly en la interfaz
-- [ ] **Comparación entre países** en la misma sesión
-- [ ] **Análisis automático** con IA (identificación de fases del ciclo)
-- [ ] **Plantillas personalizables** para exportación
-- [ ] **Modo offline** con caché de datos descargados
-- [ ] **Aplicación web** desplegada en shinyapps.io
-
-### 🔮 Futuras Mejoras
-
-- [ ] Integración con más fuentes (BdE, INE, etc.)
-- [ ] Generación automática de texto de análisis
-- [ ] Exámenes de práctica interactivos
-- [ ] Sistema de favoritos para países frecuentes
-- [ ] Exportación a PowerPoint
-
----
-
-## 📜 Licencia
-
-Este proyecto está bajo la licencia **MIT**. Ver el archivo [LICENSE](LICENSE) para más detalles.
-
-```
-MIT License
-
-Copyright (c) 2026 Víctor Gutiérrez Marcos
-
-Se permite el uso, copia, modificación y distribución de este software
-con fines educativos y de preparación de oposiciones.
-```
+- [ ] **Análisis automático** con IA que permita generar preguntas de manera directa
+- [ ] **Integración con más fuentes de datos**
 
 ---
 
@@ -541,21 +348,8 @@ con fines educativos y de preparación de oposiciones.
 
 **Víctor Gutiérrez Marcos**
 
+- 💼 LinkedIn: [Víctor Gutiérrez Marcos](https://www.linkedin.com/in/victorgutierrezmarcos)
 - 📧 Email: [victorgutierrezmarcos@gmail.com](mailto:victorgutierrezmarcos@gmail.com)
-- 🏢 Ministerio de Economía, Comercio y Empresa de España
-- 💼 LinkedIn: [Tu perfil de LinkedIn]
-- 🐙 GitHub: [@vgutierrezmarcos](https://github.com/vgutierrezmarcos)
-
----
-
-## 🙏 Agradecimientos
-
-Esta aplicación ha sido desarrollada con el objetivo de facilitar la preparación de opositores a Técnico Comercial y Economista del Estado. Un agradecimiento especial a:
-
-- 📚 **Compañeros opositores** que han proporcionado feedback valioso
-- 🏛️ **Ministerio de Economía** por la formación en análisis económico
-- 🌐 **Instituciones internacionales** (FMI, Banco Mundial, OCDE, etc.) por facilitar el acceso público a datos
-- 💻 **Comunidad R** por las excelentes herramientas de código abierto
 
 ---
 
@@ -565,15 +359,12 @@ Esta aplicación es una **herramienta de preparación no oficial** para el ejerc
 
 **Notas importantes**:
 
-- ✋ No está afiliada ni respaldada por el Ministerio de Economía, Comercio y Empresa
 - 📊 Los datos provienen de fuentes públicas internacionales y pueden contener errores o estar desactualizados
 - 🎓 El usuario es responsable de verificar la exactitud de los datos antes de su uso
-- 📖 Esta herramienta complementa, pero no sustituye, el estudio de la teoría económica y el análisis crítico
 
 **Uso recomendado**:
 - Como herramienta de **práctica** para familiarizarse con el formato de los datos
 - Para **ahorrar tiempo** en la recopilación de información
-- Como **punto de partida** para el análisis, no como solución final
 
 ---
 
@@ -582,7 +373,6 @@ Esta aplicación es una **herramienta de preparación no oficial** para el ejerc
 ### 🌟 Si esta aplicación te resulta útil, ¡dale una estrella al repositorio!
 
 [![GitHub stars](https://img.shields.io/github/stars/vgutierrezmarcos/dictamencoyuntura?style=social)](https://github.com/vgutierrezmarcos/dictamencoyuntura/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/vgutierrezmarcos/dictamencoyuntura?style=social)](https://github.com/vgutierrezmarcos/dictamencoyuntura/network/members)
 
 ---
 
