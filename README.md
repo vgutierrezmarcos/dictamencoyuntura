@@ -40,7 +40,7 @@
 
 La aplicación permite a los opositores:
 
-- ✅ **Descargar automáticamente** datos macroeconómicos de 7 fuentes internacionales
+- ✅ **Descargar automáticamente** datos macroeconómicos de 5 fuentes internacionales
 - 📊 **Visualizar y analizar** indicadores económicos organizados por categorías temáticas
 - 📄 **Exportar a Word y Excel** con formato profesional compatible con plantillas oficiales
 - 🌍 **Seleccionar cualquier país** del mundo con datos disponibles
@@ -62,7 +62,7 @@ Esta aplicación simula el tipo de cuadros macroeconómicos que podrían aparece
 
 ### 🔄 Descarga automatizada de datos
 
-- Integración con **7 fuentes internacionales**
+- Integración con **5 fuentes internacionales**
 - Descarga optimizada para reducir tiempos de espera
 
 ### 📑 Organización por categorías económicas
@@ -75,7 +75,6 @@ Los indicadores se agrupan según las siguientes categorías:
 | **Mercado laboral** |
 | **Sector exterior** |
 | **Sector público** |
-| **Precios y costes** |
 | **Indicadores monetarios y financieros** |
 | **Pro-memoria** |
 
@@ -103,7 +102,6 @@ La aplicación integra datos de las siguientes fuentes internacionales:
 |--------|-------------|-------------------------|
 | 🏦 **FMI** | Fondo Monetario Internacional | WEO, BOP, FSI, IFS, CPI |
 | 🇪🇺 **Eurostat** | Oficina Estadística de la UE | Datos de países de la Unión Europea |
-| 🌍 **OCDE** | Organización para la Cooperación y el Desarrollo Económicos | Indicadores de países miembros |
 | 🌎 **Banco Mundial** | World Development Indicators | Datos globales de desarrollo |
 | 🏪 **OMC** | Organización Mundial del Comercio | Comercio internacional |
 | 💰 **BIS** | Banco de Pagos Internacionales | Tipos de cambio efectivos |
@@ -199,7 +197,7 @@ dictamencoyuntura_app(output_dir = "mis_exportaciones")
 - La bandera del país aparecerá automáticamente
 - **Nota**: Algunos países solo tienen datos disponibles en ciertas fuentes
 
-#### 2️⃣ **Configuración del Período**
+#### 2️⃣ **Configuración del período**
 
 <div align="center">
 
@@ -218,17 +216,14 @@ dictamencoyuntura_app(output_dir = "mis_exportaciones")
 
 ```
 ☑ FMI (Fondo Monetario Internacional)
-☑ Eurostat (solo países UE)
-☑ OCDE
 ☑ Banco Mundial
+☑ Eurostat (solo países UE)
 ☑ OMC
 ☑ BIS
-☑ DBnomics
 ```
 
 - Por defecto, todas las fuentes están seleccionadas
 - **Eurostat** se desactiva automáticamente para países fuera de la UE
-- **OCDE** se desactiva para países no miembros
 
 #### 4️⃣ **Descarga de datos**
 
@@ -278,18 +273,21 @@ Los archivos se guardan (por defecto en la carpeta `output/`) con nomenclatura:
 ```
 dictamencoyuntura/
 │
-├── 📄 README.md                           # Este archivo
-├── 📄 DESCRIPTION                         # Metadatos del paquete R
-├── 📄 NAMESPACE                           # Exportación de funciones
-├── 📄 .gitignore                          # Archivos ignorados por Git
+├── 📄 README.md                            # Este archivo
+├── 📄 DESCRIPTION                          # Metadatos del paquete R
+├── 📄 NAMESPACE                            # Exportación de funciones
+├── 📄 .gitignore                           # Archivos ignorados por Git
 │
-├── 📂 R/                                  # Código fuente R
-│   └── app_dictamenes_economicos.R        # Aplicación principal Shiny
+├── 📂 data/                                
+│   └─ Indicadores_Dictamen_Economico.xlsx  # Fichero con el listado de indicadores a descargar
 │
-├── 📂 templates/                          # Plantillas de exportación
-│   └── Plantilla_Ejercicios_Dictamen.dotx # Plantilla Word
+├── 📂 R/                                   # Código fuente R
+│   └── app_dictamenes_economicos.R         # Aplicación principal Shiny
 │
-└── 📂 output/                             # Exportaciones (se crea al ejecutar)
+├── 📂 templates/                           # Plantillas de exportación
+│   └── Plantilla_Ejercicios_Dictamen.dotx  # Plantilla Word
+│
+└── 📂 output/                              # Exportaciones (se crea al ejecutar)
     ├── Dictamen_ES_20260103.docx
     └── Dictamen_ES_20260103.xlsx
 ```
