@@ -12,4 +12,27 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
     pkgload,
-    shiny
+    shiny,
+    bslib,
+    dplyr,
+    tidyr,
+    purrr,
+    officer,
+    flextable,
+    openxlsx,
+    DT,
+    lubridate,
+    stringr,
+    httr,
+    readxl,
+    countrycode,
+    imfr,
+    wbstats,
+    wtor,
+    eurostat,
+    BIS,
+    imfapi,
+    shinyjs,
+    OECD,
+    rdbnomics
+    

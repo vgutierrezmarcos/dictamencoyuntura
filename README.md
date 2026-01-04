@@ -48,7 +48,7 @@ La aplicación permite a los opositores:
 
 ### 🎓 Contexto del examen
 
-El **dictamen de coyuntura económica** es la segunda parte del primer ejercicio de las oposiciones. Los candidatos deben:
+El **dictamen de coyuntura económica** es la segunda parte del primer ejercicio de las oposiciones. Los opositores deben:
 
 1. Analizar datos macroeconómicos suministrados
 2. Redactar un dictamen económico coherente y bien fundamentado
@@ -139,7 +139,7 @@ La aplicación **instalará automáticamente** todos los paquetes necesarios la 
 shiny, bslib, shinyjs
 
 # Paquetes de descarga de datos
-WDI, imfr, imfapi, eurostat, OECD, wtor, BIS, rdbnomics
+wbstats, imfr, imfapi, eurostat, OECD, wtor, BIS, rdbnomics
 
 # Paquetes de manipulación de datos
 dplyr, tidyr, purrr, lubridate, stringr
@@ -152,6 +152,13 @@ DT, httr, readxl, countrycode
 ```
 
 **Nota**: La instalación automática puede tardar **5-10 minutos** en la primera ejecución.
+
+### Recibir actualizaciones
+
+```bash
+# Para recibir las últimas actualizaciones hacer pull (desde la terminal de RStudio, con el proyecto dictamencoyuntura abierto)
+git pull
+```
 
 ---
 

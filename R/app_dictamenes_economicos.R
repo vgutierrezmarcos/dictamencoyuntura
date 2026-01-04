@@ -1,6 +1,6 @@
 # ============================================================================
 # APLICACIÓN SHINY PARA DESCARGA DE DATOS MACROECONÓMICOS
-# Preparación de Dictámenes Económicos - Versión 9.1
+# Preparación de Dictámenes Económicos
 # ============================================================================
 #
 # FUENTES DE DATOS:
@@ -11,33 +11,6 @@
 # 5. OMC (Organización Mundial del Comercio)
 # 6. BIS (Bank for International Settlements)
 # 7. DBnomics
-#
-# CAMBIOS v9.1:
-# - NUEVO: Exportaciones netas (contribución al crecimiento en p.p.)
-# - NUEVO: Output gap (% del PIB potencial) del FMI
-# - NUEVO: Variación porcentual del empleo y fuerza laboral
-# - NUEVO: Balanza de pagos en % del PIB (además de USD)
-# - NUEVO: Posición de inversión internacional neta (NIIP) en % PIB
-# - NUEVO: Deuda externa bruta (% PIB)
-# - NUEVO: Indicadores de oferta (agricultura, industria, manufacturas, servicios)
-# - MODIFICADO: Ahorro e inversión movidos a Sector Exterior
-# - MODIFICADO: "Ratio empleo-población" cambiado a "Tasa de empleo"
-# - MODIFICADO: Nombres de precios actualizados:
-#   * "Inflación (IPC)" → "Tasa de variación interanual del IPC promedio"
-#   * "Inflación fin de período" → "Tasa de variación interanual del IPC al final del periodo"
-# - MODIFICADO: Eliminados índices de la sección de precios (solo variaciones)
-# - MODIFICADO: Sector público dividido en "Ingresos y gastos" / "Balances y deuda"
-# - MODIFICADO: Títulos de subcategorías sin unidades de medida
-# - ELIMINADO: PIB nominal en USD del Banco Mundial
-# - ELIMINADO: PIB nominal fiscal en UML
-#
-# CAMBIOS v9.0:
-# - Sin conversión automática de unidades - valores en unidad original
-# - Descarga de FSI (Financial Soundness Indicators) del FMI
-# - Todos los indicadores muestran nombres descriptivos (no códigos)
-# - Mapeo completo de indicadores BOP con descripciones en español
-# - Indicadores monetarios y financieros ampliados (como en Narnia)
-# - Categorización de indicadores más precisa
 #
 # Fecha: Enero 2026
 # ============================================================================
@@ -68,7 +41,6 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   paquetes_necesarios <- c(
     "shiny",
     "bslib",
-    "WDI",
     "dplyr",
     "tidyr",
     "purrr",
@@ -81,6 +53,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     "httr",
     "readxl",
     "countrycode",
+    "wbstats",
     "imfr",
     "wtor",
     "eurostat",
@@ -101,7 +74,6 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   suppressPackageStartupMessages({
     library(shiny)
     library(bslib)
-    library(WDI)
     library(dplyr)
     library(tidyr)
     library(officer)
@@ -431,95 +403,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         margin-top: 0.5rem;
       }
     ")
-  
-  # ============================================================================
-  # DICCIONARIO DE PAÍSES
-  # ============================================================================
-  
-  diccionario_paises_es <- c(
-    "Afghanistan" = "Afganistán", "Albania" = "Albania", "Algeria" = "Argelia",
-    "Andorra" = "Andorra", "Angola" = "Angola", "Argentina" = "Argentina",
-    "Armenia" = "Armenia", "Australia" = "Australia", "Austria" = "Austria",
-    "Azerbaijan" = "Azerbaiyán", "Bahamas, The" = "Bahamas", "Bahrain" = "Baréin",
-    "Bangladesh" = "Bangladés", "Barbados" = "Barbados", "Belarus" = "Bielorrusia",
-    "Belgium" = "Bélgica", "Belize" = "Belice", "Benin" = "Benín",
-    "Bhutan" = "Bután", "Bolivia" = "Bolivia", "Bosnia and Herzegovina" = "Bosnia y Herzegovina",
-    "Botswana" = "Botsuana", "Brazil" = "Brasil", "Brunei Darussalam" = "Brunéi",
-    "Bulgaria" = "Bulgaria", "Burkina Faso" = "Burkina Faso", "Burundi" = "Burundi",
-    "Cabo Verde" = "Cabo Verde", "Cambodia" = "Camboya", "Cameroon" = "Camerún",
-    "Canada" = "Canadá", "Central African Republic" = "República Centroafricana",
-    "Chad" = "Chad", "Chile" = "Chile", "China" = "China", "Colombia" = "Colombia",
-    "Comoros" = "Comoras", "Congo, Dem. Rep." = "República Democrática del Congo",
-    "Congo, Rep." = "República del Congo", "Costa Rica" = "Costa Rica",
-    "Cote d'Ivoire" = "Costa de Marfil", "Croatia" = "Croacia", "Cuba" = "Cuba",
-    "Cyprus" = "Chipre", "Czech Republic" = "República Checa", "Czechia" = "Chequia",
-    "Denmark" = "Dinamarca", "Djibouti" = "Yibuti", "Dominica" = "Dominica",
-    "Dominican Republic" = "República Dominicana", "Ecuador" = "Ecuador",
-    "Egypt, Arab Rep." = "Egipto", "El Salvador" = "El Salvador",
-    "Equatorial Guinea" = "Guinea Ecuatorial", "Eritrea" = "Eritrea",
-    "Estonia" = "Estonia", "Eswatini" = "Esuatini", "Ethiopia" = "Etiopía",
-    "Fiji" = "Fiyi", "Finland" = "Finlandia", "France" = "Francia",
-    "Gabon" = "Gabón", "Gambia, The" = "Gambia", "Georgia" = "Georgia",
-    "Germany" = "Alemania", "Ghana" = "Ghana", "Greece" = "Grecia",
-    "Grenada" = "Granada", "Guatemala" = "Guatemala", "Guinea" = "Guinea",
-    "Guinea-Bissau" = "Guinea-Bisáu", "Guyana" = "Guyana", "Haiti" = "Haití",
-    "Honduras" = "Honduras", "Hong Kong SAR, China" = "Hong Kong",
-    "Hungary" = "Hungría", "Iceland" = "Islandia", "India" = "India",
-    "Indonesia" = "Indonesia", "Iran, Islamic Rep." = "Irán", "Iraq" = "Irak",
-    "Ireland" = "Irlanda", "Israel" = "Israel", "Italy" = "Italia",
-    "Jamaica" = "Jamaica", "Japan" = "Japón", "Jordan" = "Jordania",
-    "Kazakhstan" = "Kazajistán", "Kenya" = "Kenia", "Kiribati" = "Kiribati",
-    "Korea, Dem. People's Rep." = "Corea del Norte", "Korea, Rep." = "Corea del Sur",
-    "Kosovo" = "Kosovo", "Kuwait" = "Kuwait", "Kyrgyz Republic" = "Kirguistán",
-    "Lao PDR" = "Laos", "Latvia" = "Letonia", "Lebanon" = "Líbano",
-    "Lesotho" = "Lesoto", "Liberia" = "Liberia", "Libya" = "Libia",
-    "Liechtenstein" = "Liechtenstein", "Lithuania" = "Lituania",
-    "Luxembourg" = "Luxemburgo", "Macao SAR, China" = "Macao",
-    "Madagascar" = "Madagascar", "Malawi" = "Malaui", "Malaysia" = "Malasia",
-    "Maldives" = "Maldivas", "Mali" = "Malí", "Malta" = "Malta",
-    "Marshall Islands" = "Islas Marshall", "Mauritania" = "Mauritania",
-    "Mauritius" = "Mauricio", "Mexico" = "México",
-    "Micronesia, Fed. Sts." = "Micronesia", "Moldova" = "Moldavia",
-    "Monaco" = "Mónaco", "Mongolia" = "Mongolia", "Montenegro" = "Montenegro",
-    "Morocco" = "Marruecos", "Mozambique" = "Mozambique", "Myanmar" = "Birmania",
-    "Namibia" = "Namibia", "Nauru" = "Nauru", "Nepal" = "Nepal",
-    "Netherlands" = "Países Bajos", "New Zealand" = "Nueva Zelanda",
-    "Nicaragua" = "Nicaragua", "Niger" = "Níger", "Nigeria" = "Nigeria",
-    "North Macedonia" = "Macedonia del Norte", "Norway" = "Noruega",
-    "Oman" = "Omán", "Pakistan" = "Pakistán", "Palau" = "Palaos",
-    "Panama" = "Panamá", "Papua New Guinea" = "Papúa Nueva Guinea",
-    "Paraguay" = "Paraguay", "Peru" = "Perú", "Philippines" = "Filipinas",
-    "Poland" = "Polonia", "Portugal" = "Portugal", "Puerto Rico" = "Puerto Rico",
-    "Qatar" = "Catar", "Romania" = "Rumanía", "Russian Federation" = "Rusia",
-    "Rwanda" = "Ruanda", "Samoa" = "Samoa", "San Marino" = "San Marino",
-    "Sao Tome and Principe" = "Santo Tomé y Príncipe", "Saudi Arabia" = "Arabia Saudita",
-    "Senegal" = "Senegal", "Serbia" = "Serbia", "Seychelles" = "Seychelles",
-    "Sierra Leone" = "Sierra Leona", "Singapore" = "Singapur",
-    "Slovak Republic" = "Eslovaquia", "Slovenia" = "Eslovenia",
-    "Solomon Islands" = "Islas Salomón", "Somalia" = "Somalia",
-    "South Africa" = "Sudáfrica", "South Sudan" = "Sudán del Sur",
-    "Spain" = "España", "Sri Lanka" = "Sri Lanka",
-    "St. Kitts and Nevis" = "San Cristóbal y Nieves", "St. Lucia" = "Santa Lucía",
-    "St. Vincent and the Grenadines" = "San Vicente y las Granadinas",
-    "Sudan" = "Sudán", "Suriname" = "Surinam", "Sweden" = "Suecia",
-    "Switzerland" = "Suiza", "Syrian Arab Republic" = "Siria",
-    "Tajikistan" = "Tayikistán", "Tanzania" = "Tanzania", "Thailand" = "Tailandia",
-    "Timor-Leste" = "Timor Oriental", "Togo" = "Togo", "Tonga" = "Tonga",
-    "Trinidad and Tobago" = "Trinidad y Tobago", "Tunisia" = "Túnez",
-    "Turkey" = "Turquía", "Turkmenistan" = "Turkmenistán", "Tuvalu" = "Tuvalu",
-    "Uganda" = "Uganda", "Ukraine" = "Ucrania",
-    "United Arab Emirates" = "Emiratos Árabes Unidos", "United Kingdom" = "Reino Unido",
-    "United States" = "Estados Unidos", "Uruguay" = "Uruguay",
-    "Uzbekistan" = "Uzbekistán", "Vanuatu" = "Vanuatu", "Venezuela, RB" = "Venezuela",
-    "Vietnam" = "Vietnam", "West Bank and Gaza" = "Cisjordania y Gaza",
-    "Yemen, Rep." = "Yemen", "Zambia" = "Zambia", "Zimbabwe" = "Zimbabue"
-  )
-  
-  # Lista de países UE
-  paises_ue <- c("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
-                 "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL",
-                 "PL", "PT", "RO", "SK", "SI", "ES", "SE")
-  
+
   # ============================================================================
   # INDICADORES DEL BANCO MUNDIAL
   # ============================================================================
@@ -728,17 +612,13 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   # ============================================================================
   
   obtener_lista_paises <- function() {
-    paises <- WDI::WDI_data$country
+    paises <- wbstats::wb_countries(lang = "es")
     
     paises |>
-      dplyr::filter(region != "Aggregates") |>
+      dplyr::filter(region != "Agregados") |>
       dplyr::select(iso2c, iso3c, country) |>
       dplyr::mutate(
-        country_es = ifelse(
-          country %in% names(diccionario_paises_es),
-          diccionario_paises_es[country],
-          country
-        )
+        country_es = country
       ) |>
       dplyr::select(iso2c, iso3c, country_es) |>
       dplyr::arrange(country_es)
@@ -752,6 +632,129 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       format(round(x, decimales), nsmall = decimales, big.mark = ".", decimal.mark = ",", 
              trim = TRUE, scientific = FALSE)
     }
+  }
+  
+  # ============================================================================
+  # FUNCIÓN - Obtener codelists del FMI (nombres en inglés, descripciones)
+  # ============================================================================
+  
+  # Variable global para almacenar los codelists (se carga una vez)
+  codelists_fmi_cache <- NULL
+  
+  obtener_codelists_fmi <- function(forzar_recarga = FALSE) {
+    # Si ya está en caché y no se fuerza recarga, devolver caché
+    if (!is.null(codelists_fmi_cache) && !forzar_recarga) {
+      return(codelists_fmi_cache)
+    }
+    
+    # Verificar que imfapi está disponible
+    if (!requireNamespace("imfapi", quietly = TRUE)) {
+      message("Paquete imfapi no disponible para obtener codelists")
+      return(NULL)
+    }
+    
+    dataflows <- c("WEO", "FM", "BOP", "CPI", "FSIC")
+    lista_dfs <- list()
+    
+    for (dataflow in dataflows) {
+      tryCatch({
+        message("Descargando codelist: ", dataflow)
+        
+        temp_df <- imfapi::imf_get_codelists(
+          dimension_ids = "INDICATOR",
+          dataflow_id = dataflow
+        )
+        
+        if (!is.null(temp_df) && nrow(temp_df) > 0) {
+          # Estandarizar nombres de columnas
+          # imfapi devuelve: code, name, description (pueden variar)
+          nombres_cols <- tolower(names(temp_df))
+          names(temp_df) <- nombres_cols
+          
+          # Asegurar que existen las columnas necesarias
+          if (!"code" %in% names(temp_df)) {
+            if ("id" %in% names(temp_df)) names(temp_df)[names(temp_df) == "id"] <- "code"
+          }
+          if (!"name" %in% names(temp_df)) {
+            if ("label" %in% names(temp_df)) names(temp_df)[names(temp_df) == "label"] <- "name"
+          }
+          if (!"description" %in% names(temp_df)) {
+            temp_df$description <- NA_character_
+          }
+          
+          temp_df$source_dataflow <- dataflow
+          lista_dfs[[dataflow]] <- temp_df
+        }
+      }, error = function(e) {
+        message("Error descargando codelist ", dataflow, ": ", e$message)
+      })
+    }
+    
+    if (length(lista_dfs) == 0) {
+      return(NULL)
+    }
+    
+    # Combinar todos los dataframes
+    resultado <- dplyr::bind_rows(lista_dfs)
+    
+    # Seleccionar y renombrar columnas de interés
+    cols_disponibles <- names(resultado)
+    cols_seleccionar <- intersect(c("code", "name", "description", "source_dataflow"), cols_disponibles)
+    
+    resultado <- resultado |>
+      dplyr::select(dplyr::all_of(cols_seleccionar)) |>
+      dplyr::rename(
+        indicador_codigo = code,
+        name_en = name,
+        description_en = description,
+        source_db = source_dataflow
+      ) |>
+      dplyr::distinct(indicador_codigo, .keep_all = TRUE)  # Eliminar duplicados, mantener primera aparición
+    
+    # Guardar en caché
+    codelists_fmi_cache <<- resultado
+    
+    message("✓ Codelists FMI cargados: ", nrow(resultado), " indicadores")
+    return(resultado)
+  }
+  
+  # Función para enriquecer datos con nombres en inglés
+  enriquecer_con_nombres_ingles <- function(datos, codelists = NULL) {
+    if (is.null(datos) || nrow(datos) == 0) return(datos)
+    
+    # Obtener codelists si no se proporcionan
+    if (is.null(codelists)) {
+      codelists <- obtener_codelists_fmi()
+    }
+    
+    if (is.null(codelists) || nrow(codelists) == 0) {
+      # Si no hay codelists, añadir columnas vacías
+      datos$name_en <- NA_character_
+      datos$description_en <- NA_character_
+      datos$source_db <- NA_character_
+      return(datos)
+    }
+    
+    # Hacer join con los codelists
+    datos <- datos |>
+      dplyr::left_join(
+        codelists |> dplyr::select(indicador_codigo, name_en, description_en, source_db),
+        by = "indicador_codigo"
+      )
+    
+    # Si el nombre en español está vacío o es igual al código, usar el nombre en inglés
+    datos <- datos |>
+      dplyr::mutate(
+        indicador_nombre = dplyr::case_when(
+          # Si el nombre es NA, vacío o igual al código, usar nombre en inglés
+          is.na(indicador_nombre) | indicador_nombre == "" | indicador_nombre == indicador_codigo ~ 
+            dplyr::coalesce(name_en, indicador_codigo),
+          # Si no, mantener el nombre en español
+          TRUE ~ indicador_nombre
+        )
+      )
+    
+    return(datos)
   }
   
   # ============================================================================
@@ -810,6 +813,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         year = date, 
         iso2c = iso2c,
         indicador_codigo = indicator_id,
+        indicador_nombre_original = indicator,
         valor = value
       ) |>
       dplyr::left_join(mapeo_df, by = "indicador_codigo") |>
@@ -915,7 +919,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       "TXG_FOB_USD" = c("Exportaciones de bienes FOB", "USD", "Dólares (unidad original)"),
       "TMG_CIF_USD" = c("Importaciones de bienes CIF", "USD", "Dólares (unidad original)"),
       
-      # === SECTOR EXTERIOR - BOP (Balance of Payments) v9.0 AMPLIADO ===
+      # === SECTOR EXTERIOR - BOP (Balance of Payments) ===
       # --- Balanza de pagos en USD (miles de millones) ---
       "CAB" = c("Cuenta corriente", "mm. USD", "Miles de millones de dólares"),
       "CABXEF" = c("Cuenta corriente (exc. oro)", "mm. USD", "Miles de millones de dólares"),
@@ -1053,7 +1057,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       "FPS_XDC" = c("Crédito sector privado", "UML", "Moneda local (unidad original)"),
       "FPS_GDP" = c("Crédito sector privado", "% PIB", "Porcentaje del PIB"),
       
-      # === FSI (Financial Soundness Indicators) v9.0 NUEVO - Como en Narnia ===
+      # === FSI (Financial Soundness Indicators) ===
       # Capital
       "FSANL_PT" = c("Ratio préstamos morosos", "%", "Porcentaje de préstamos totales"),
       "FSKRC_PT" = c("Capital regulatorio sobre activos pond. riesgo", "%", "Porcentaje"),
@@ -1082,7 +1086,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     
     # -------------------------------------------------------------------------
     # 4. Función auxiliar para generar nombres descriptivos de códigos desconocidos
-    # v9.0: Para que no aparezcan códigos crudos sino descripciones legibles
+    # Para que no aparezcan códigos crudos sino descripciones legibles
     # -------------------------------------------------------------------------
     generar_nombre_descriptivo <- function(codigo) {
       # Primero verificar si está en el mapeo
@@ -1197,7 +1201,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           dplyr::filter(year >= as.integer(anio_inicio) & year <= as.integer(anio_fin)) |>
           dplyr::mutate(
             indicador_codigo = INDICATOR,
-            # v9.0: Usar función para nombres descriptivos
+            # Usar función para nombres descriptivos
             indicador_nombre = sapply(INDICATOR, function(x) {
               if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][1] else generar_nombre_descriptivo(x)
             }),
@@ -1247,7 +1251,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           dplyr::filter(year >= as.integer(anio_inicio) & year <= as.integer(anio_fin)) |>
           dplyr::mutate(
             indicador_codigo = INDICATOR,
-            # v9.0: Usar función para nombres descriptivos
+            # Usar función para nombres descriptivos
             indicador_nombre = sapply(INDICATOR, function(x) {
               if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][1] else generar_nombre_descriptivo(x)
             }),
@@ -1299,7 +1303,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           dplyr::filter(year >= as.integer(anio_inicio) & year <= as.integer(anio_fin)) |>
           dplyr::mutate(
             indicador_codigo = INDICATOR,
-            # v9.0: Usar función para nombres descriptivos de BOP
+            # Usar función para nombres descriptivos de BOP
             indicador_nombre = sapply(INDICATOR, function(x) {
               if (x %in% names(mapeo_indicadores)) mapeo_indicadores[[x]][1] else generar_nombre_descriptivo(x)
             }),
@@ -1329,7 +1333,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     })
     
     # -------------------------------------------------------------------------
-    # 8. Descargar CPI (Consumer Price Index) - v8.0 MEJORADO
+    # 8. Descargar CPI (Consumer Price Index)
     # -------------------------------------------------------------------------
     tryCatch({
       # CPI tiene dimensiones: COUNTRY, INDEX_TYPE, COICOP_1999, TYPE_OF_TRANSFORMATION, FREQUENCY
@@ -1401,14 +1405,14 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     })
     
     # -------------------------------------------------------------------------
-    # 9. Descargar FSI (Financial Soundness Indicators) - v9.0 NUEVO
+    # 9. Descargar FSI (Financial Soundness Indicators)
     # Indicadores de solidez financiera: morosidad, capital, ROE, ROA, liquidez
     # -------------------------------------------------------------------------
     tryCatch({
       datos_fsi <- suppressWarnings({
         imfapi::imf_get(
-          dataflow_id = "FSI",
-          dimensions = list(REF_AREA = pais_codigo_iso2, FREQ = "A"),
+          dataflow_id = "FSIC",
+          dimensions = list(COUNTRY = pais_codigo_iso3, FREQUENCY = "A"),
           start_period = anio_inicio,
           end_period = anio_fin,
           progress = FALSE,
@@ -1417,7 +1421,6 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       })
       
       if (!is.null(datos_fsi) && nrow(datos_fsi) > 0) {
-        # FSI usa REF_AREA con ISO2 y tiene columna INDICATOR
         col_indicator <- if ("INDICATOR" %in% names(datos_fsi)) "INDICATOR" else "FSI_INDICATOR"
         
         if (col_indicator %in% names(datos_fsi)) {
@@ -1999,7 +2002,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   }
   
   # ============================================================================
-  # OCDE - Datos de la Organización para la Cooperación y el Desarrollo (v8.0)
+  # OCDE - Datos de la Organización para la Cooperación y el Desarrollo
   # NOTA: La API antigua (stats.oecd.org) fue deprecada. Ahora usamos API REST directa.
   # ============================================================================
   
@@ -2222,7 +2225,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   }
   
   # ============================================================================
-  # DBnomics - Agregador de múltiples fuentes (NUEVO v8.0)
+  # DBnomics - Agregador de múltiples fuentes
   # ============================================================================
   
   descargar_datos_dbnomics <- function(pais_codigo_iso2, fecha_inicio, fecha_fin) {
@@ -2393,12 +2396,12 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   }
   
   # ============================================================================
-  # FUNCIÓN COMBINADA - v8.0 (con deduplicación mejorada)
+  # FUNCIÓN COMBINADA
   # ============================================================================
   
   # Función auxiliar para obtener nombre canónico de indicadores equivalentes
   obtener_nombre_canonico <- function(nombre_indicador) {
-    # Mapeo de indicadores equivalentes entre fuentes - v9.0 AMPLIADO
+    # Mapeo de indicadores equivalentes entre fuentes
     equivalencias <- list(
       "PIB real" = c("PIB real", "PIB real (OCDE)", "PIB real (DBnomics)", "GDP constant prices"),
       "PIB nominal" = c("PIB nominal", "GDP current prices"),
@@ -2465,12 +2468,12 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     return(datos_dedup)
   }
   
-  # Función para normalizar unidades y valores - v9.0 SIN CONVERSIONES
+  # Función para normalizar unidades y valores
   # Los valores se mantienen en la unidad original de la fuente
   normalizar_valores <- function(datos) {
     if (is.null(datos) || nrow(datos) == 0) return(datos)
     
-    # v9.0: NO se hacen conversiones de unidades
+    # NO se hacen conversiones de unidades
     # Los valores se mantienen exactamente como vienen de la fuente original
     # El usuario puede hacer las conversiones manualmente si lo necesita
     
@@ -2618,7 +2621,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     if (grepl("spread|diferencial|margen de intermediación|margen de interés", nombre)) {
       return("Precios y monetarios")
     }
-    # v9.0: FSI indicators
+    # FSI indicators
     if (grepl("capital regulatorio|capital sobre|tier 1|tier 2|activos ponderados|ratio liquidez|depósitos clientes", nombre)) {
       return("Precios y monetarios")
     }
@@ -2727,7 +2730,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       progreso_actual <- progreso_actual + incremento
     }
     
-    # 3. OCDE - Prioridad 2 (NUEVO v8.0)
+    # 3. OCDE - Prioridad 2
     if (usar_ocde) {
       progreso(progreso_actual, "Descargando OCDE...")
       datos_ocde <- tryCatch({
@@ -2787,7 +2790,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       progreso_actual <- progreso_actual + incremento
     }
     
-    # 7. DBnomics - Prioridad 6 (respaldo) (NUEVO v8.0)
+    # 7. DBnomics - Prioridad 6 (respaldo)
     if (usar_dbnomics) {
       progreso(progreso_actual, "Descargando DBnomics...")
       datos_dbnomics <- tryCatch({
@@ -2837,6 +2840,10 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     progreso(0.90, "Normalizando valores...")
     datos_normalizados <- normalizar_valores(datos_deduplicados)
     
+    # Enriquecer con nombres en inglés del FMI
+    progreso(0.92, "Obteniendo nombres en inglés...")
+    datos_normalizados <- enriquecer_con_nombres_ingles(datos_normalizados)
+    
     # Añadir categoría detectada a cada registro
     datos_normalizados <- datos_normalizados |>
       dplyr::rowwise() |>
@@ -2856,7 +2863,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   }
   
   # ============================================================================
-  # ORGANIZAR POR CATEGORÍA - v8.0 (con patrones flexibles para BOP/CPI)
+  # ORGANIZAR POR CATEGORÍA
   # ============================================================================
   
   organizar_por_categoria <- function(datos, anio_inicio = NULL, anio_fin = NULL) {
@@ -2875,7 +2882,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       unlist(lapply(lista, names), use.names = FALSE)
     }
     
-    # v8.0: Función para detectar indicadores por patrones regex
+    # Función para detectar indicadores por patrones regex
     detectar_categoria <- function(indicador_nombre, indicador_codigo) {
       nombre <- tolower(indicador_nombre)
       codigo <- tolower(indicador_codigo)
@@ -2978,7 +2985,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         return("sector_publico")
       }
       
-      # PRECIOS, COSTES E INDICADORES MONETARIOS (UNIFICADO v8.0)
+      # PRECIOS, COSTES E INDICADORES MONETARIOS
       if (grepl("inflación|inflation|ipc|cpi|hicp|precios al consumo", nombre)) {
         return("precios_monetarios")
       }
@@ -3646,14 +3653,19 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     openxlsx::addWorksheet(wb, "Datos consolidados")
     
     if (!is.null(datos_completos) && nrow(datos_completos) > 0) {
-      # Preparar datos con formato requerido:
-      # Sección | Indicador | Código | Unidad | Fuente | Años...
+      # Preparar datos con formato requerido incluyendo nombres en inglés:
+      # Sección | Indicador | Nombre (EN) | Descripción (EN) | Código | Unidad | Fuente | Base datos | Años...
       
       # Usar valor_original si existe, si no usar valor
       col_valor <- if ("valor_original" %in% names(datos_completos)) "valor_original" else "valor"
       
       # Verificar si ya existe la columna categoria
       tiene_categoria <- "categoria" %in% names(datos_completos)
+      
+      # Verificar si existen las columnas de nombres en inglés
+      tiene_name_en <- "name_en" %in% names(datos_completos)
+      tiene_description_en <- "description_en" %in% names(datos_completos)
+      tiene_source_db <- "source_db" %in% names(datos_completos)
       
       datos_para_excel <- datos_completos |>
         dplyr::mutate(
@@ -3674,16 +3686,21 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
             !is.na(unidad_corta) & unidad_corta != "" ~ unidad_corta,
             TRUE ~ NA_character_
           ),
+          # Columnas de nombres en inglés
+          Nombre_EN = if (tiene_name_en) name_en else NA_character_,
+          Descripcion_EN = if (tiene_description_en) description_en else NA_character_,
+          Base_Datos = if (tiene_source_db) source_db else NA_character_,
           # Valor original sin transformar
           valor_export = .data[[col_valor]]
         ) |>
-        dplyr::select(year, Seccion, Indicador = indicador_nombre, Codigo, Unidad, Fuente = fuente, valor_export) |>
-        dplyr::group_by(year, Seccion, Indicador, Codigo, Unidad, Fuente) |>
+        dplyr::select(year, Seccion, Indicador = indicador_nombre, Nombre_EN, Descripcion_EN, 
+                      Codigo, Unidad, Fuente = fuente, Base_Datos, valor_export) |>
+        dplyr::group_by(year, Seccion, Indicador, Nombre_EN, Descripcion_EN, Codigo, Unidad, Fuente, Base_Datos) |>
         dplyr::summarise(valor_export = dplyr::first(valor_export, na_rm = TRUE), .groups = "drop")
       
       # Crear combinación completa de indicadores y años
       indicadores_info <- datos_para_excel |>
-        dplyr::select(Seccion, Indicador, Codigo, Unidad, Fuente) |>
+        dplyr::select(Seccion, Indicador, Nombre_EN, Descripcion_EN, Codigo, Unidad, Fuente, Base_Datos) |>
         dplyr::distinct()
       
       combinacion_completa <- tidyr::expand_grid(
@@ -3693,9 +3710,11 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       
       # Unir y pivotar
       datos_para_excel <- combinacion_completa |>
-        dplyr::left_join(datos_para_excel, by = c("Seccion", "Indicador", "Codigo", "Unidad", "Fuente", "year")) |>
+        dplyr::left_join(datos_para_excel, 
+                         by = c("Seccion", "Indicador", "Nombre_EN", "Descripcion_EN", 
+                                "Codigo", "Unidad", "Fuente", "Base_Datos", "year")) |>
         tidyr::pivot_wider(
-          id_cols = c(Seccion, Indicador, Codigo, Unidad, Fuente),
+          id_cols = c(Seccion, Indicador, Nombre_EN, Descripcion_EN, Codigo, Unidad, Fuente, Base_Datos),
           names_from = year,
           values_from = valor_export,
           names_sort = TRUE
@@ -3708,9 +3727,12 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         ) |>
         as.data.frame()
       
-      # Reemplazar NA por texto vacío en Código
+      # Reemplazar NA por texto vacío en columnas de texto
       datos_para_excel$Codigo <- ifelse(is.na(datos_para_excel$Codigo), "", datos_para_excel$Codigo)
       datos_para_excel$Unidad <- ifelse(is.na(datos_para_excel$Unidad), "", datos_para_excel$Unidad)
+      datos_para_excel$Nombre_EN <- ifelse(is.na(datos_para_excel$Nombre_EN), "", datos_para_excel$Nombre_EN)
+      datos_para_excel$Descripcion_EN <- ifelse(is.na(datos_para_excel$Descripcion_EN), "", datos_para_excel$Descripcion_EN)
+      datos_para_excel$Base_Datos <- ifelse(is.na(datos_para_excel$Base_Datos), "", datos_para_excel$Base_Datos)
       
       # Escribir datos
       openxlsx::writeData(wb, "Datos consolidados", datos_para_excel,
@@ -3718,30 +3740,34 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       
       n_filas <- nrow(datos_para_excel)
       n_cols <- ncol(datos_para_excel)
+      n_cols_texto <- 8  # Sección, Indicador, Nombre_EN, Descripcion_EN, Código, Unidad, Fuente, Base_Datos
       
       if (n_filas > 0) {
-        # Estilo para columnas de texto (Sección, Indicador, Código, Unidad, Fuente)
+        # Estilo para columnas de texto
         openxlsx::addStyle(wb, "Datos consolidados", estilo_indicador,
-                           rows = 2:(n_filas + 1), cols = 1:5, gridExpand = TRUE)
+                           rows = 2:(n_filas + 1), cols = 1:n_cols_texto, gridExpand = TRUE)
         
         # Estilo para columnas de datos numéricos
-        if (n_cols > 5) {
+        if (n_cols > n_cols_texto) {
           openxlsx::addStyle(wb, "Datos consolidados", estilo_datos,
                              rows = 2:(n_filas + 1),
-                             cols = 6:n_cols, gridExpand = TRUE)
+                             cols = (n_cols_texto + 1):n_cols, gridExpand = TRUE)
         }
       }
       
       # Anchos de columna
-      openxlsx::setColWidths(wb, "Datos consolidados", cols = 1, widths = 20)  # Sección
-      openxlsx::setColWidths(wb, "Datos consolidados", cols = 2, widths = 45)  # Indicador
-      openxlsx::setColWidths(wb, "Datos consolidados", cols = 3, widths = 25)  # Código
-      openxlsx::setColWidths(wb, "Datos consolidados", cols = 4, widths = 30)  # Unidad
-      openxlsx::setColWidths(wb, "Datos consolidados", cols = 5, widths = 15)  # Fuente
-      if (n_cols > 5) {
-        openxlsx::setColWidths(wb, "Datos consolidados", cols = 6:n_cols, widths = 15)
+      openxlsx::setColWidths(wb, "Datos consolidados", cols = 1, widths = 20)   # Sección
+      openxlsx::setColWidths(wb, "Datos consolidados", cols = 2, widths = 45)   # Indicador
+      openxlsx::setColWidths(wb, "Datos consolidados", cols = 3, widths = 50)   # Nombre_EN
+      openxlsx::setColWidths(wb, "Datos consolidados", cols = 4, widths = 60)   # Descripcion_EN
+      openxlsx::setColWidths(wb, "Datos consolidados", cols = 5, widths = 25)   # Código
+      openxlsx::setColWidths(wb, "Datos consolidados", cols = 6, widths = 30)   # Unidad
+      openxlsx::setColWidths(wb, "Datos consolidados", cols = 7, widths = 15)   # Fuente
+      openxlsx::setColWidths(wb, "Datos consolidados", cols = 8, widths = 12)   # Base_Datos
+      if (n_cols > n_cols_texto) {
+        openxlsx::setColWidths(wb, "Datos consolidados", cols = (n_cols_texto + 1):n_cols, widths = 15)
       }
-      openxlsx::freezePane(wb, "Datos consolidados", firstActiveRow = 2, firstActiveCol = 6)
+      openxlsx::freezePane(wb, "Datos consolidados", firstActiveRow = 2, firstActiveCol = (n_cols_texto + 1))
     }
     
     nombres_categorias <- c(
@@ -4449,7 +4475,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     bandera_actual <- reactiveVal("")
     resumen_fuentes <- reactiveVal(NULL)
     es_pais_ue <- reactiveVal(TRUE)
-    es_pais_ocde <- reactiveVal(TRUE)  # NUEVO v8.0
+    es_pais_ocde <- reactiveVal(TRUE) 
     iso3_actual <- reactiveVal("")  # Código ISO3 del país actual
     
     # Cargar lista de países al iniciar
@@ -4494,7 +4520,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       pais_en_ue <- iso2 %in% paises_ue
       es_pais_ue(pais_en_ue)
       
-      # Verificar si el país es de la OCDE (NUEVO v8.0)
+      # Verificar si el país es de la OCDE
       pais_en_ocde <- !is.null(pais_iso3) && pais_iso3 %in% paises_ocde
       es_pais_ocde(pais_en_ocde)
       
@@ -4555,7 +4581,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       }
     })
     
-    # Alerta de OCDE (NUEVO v8.0)
+    # Alerta de OCDE
     output$alerta_ocde <- renderUI({
       if (!es_pais_ocde()) {
         div(
@@ -4566,7 +4592,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       }
     })
     
-    # Botones seleccionar/deseleccionar todas - v8.0 actualizado
+    # Botones seleccionar/deseleccionar todas
     observeEvent(input$btn_seleccionar_todas, {
       fuentes_base <- c("fmi", "bm", "omc", "bis", "dbnomics")
       if (es_pais_ue()) {
@@ -4743,8 +4769,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         usar_omc <- "omc" %in% input$fuentes_datos
         usar_bis <- "bis" %in% input$fuentes_datos
         usar_eurostat <- "eurostat" %in% input$fuentes_datos && es_pais_ue()
-        usar_ocde <- "ocde" %in% input$fuentes_datos && es_pais_ocde()  # NUEVO v8.0
-        usar_dbnomics <- "dbnomics" %in% input$fuentes_datos  # NUEVO v8.0
+        usar_ocde <- "ocde" %in% input$fuentes_datos && es_pais_ocde()
+        usar_dbnomics <- "dbnomics" %in% input$fuentes_datos
         
         # Contar fuentes activas para calcular incrementos
         n_fuentes <- sum(c(usar_fmi, usar_eurostat, usar_ocde, usar_bm, usar_omc, usar_bis, usar_dbnomics))
