@@ -4,13 +4,11 @@
 # ============================================================================
 #
 # FUENTES DE DATOS:
-# 1. FMI (WEO, FM, BOP, CPI, FSI) - Usando paquete imfapi (API SDMX 3.0)
+# 1. FMI (WEO, FM, BOP, FSI) - Usando paquete imfapi (API SDMX 3.0)
 # 2. Eurostat
-# 3. OCDE
-# 4. Banco Mundial (World Development Indicators)
-# 5. OMC (Organización Mundial del Comercio)
-# 6. BIS (Bank for International Settlements)
-# 7. DBnomics
+# 3. Banco Mundial (World Development Indicators)
+# 4. OMC (Organización Mundial del Comercio)
+# 5. BIS (Bank for International Settlements)
 #
 # Fecha: Enero 2026
 # ============================================================================
@@ -450,6 +448,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       # Verificar si existen columnas opcionales
       tiene_escala <- "Escala" %in% names(df)
       tiene_decimales <- "Decimales" %in% names(df)
+      tiene_nivel <- "Nivel" %in% names(df)
       
       # Crear el dataframe preservando el orden del Excel y TODAS las columnas originales
       indicadores_excel_cache <<- df |>
@@ -469,6 +468,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           Escala = if (tiene_escala) as.character(.data[["Escala"]]) else "x1",
           # Decimales: si existe usarla, si no default 1
           Decimales = if (tiene_decimales) as.integer(.data[["Decimales"]]) else 1L,
+          # Nivel: si existe usarla, si no default 1 (sin sangría)
+          Nivel = if (tiene_nivel) as.integer(.data[["Nivel"]]) else 1L,
           # Normalizar la columna Fuente para filtrado interno
           # FMI, FMI (WEO), FMI (BOP) -> FMI con la base de datos correspondiente
           Fuente = dplyr::case_when(
@@ -486,6 +487,9 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       # Limpiar columna Decimales (valores NA -> 1)
       indicadores_excel_cache$Decimales[is.na(indicadores_excel_cache$Decimales)] <- 1L
       
+      # Limpiar columna Nivel (valores NA -> 1)
+      indicadores_excel_cache$Nivel[is.na(indicadores_excel_cache$Nivel)] <- 1L
+      
       message("✓ Cargados ", nrow(indicadores_excel_cache), " indicadores del Excel")
       if (tiene_escala) {
         escalas_usadas <- unique(indicadores_excel_cache$Escala[indicadores_excel_cache$Escala != "x1"])
@@ -496,6 +500,10 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       if (tiene_decimales) {
         decimales_usados <- sort(unique(indicadores_excel_cache$Decimales))
         message("  🔢 Decimales configurados: ", paste(decimales_usados, collapse = ", "))
+      }
+      if (tiene_nivel) {
+        niveles_usados <- sort(unique(indicadores_excel_cache$Nivel))
+        message("  📑 Niveles de sangría: ", paste(niveles_usados, collapse = ", "))
       }
       
       # Mostrar resumen por fuente y base de datos
@@ -619,8 +627,9 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     
     if (is.null(indicadores) || nrow(indicadores) == 0) return(NULL)
     
-    # Verificar si existe columna Decimales
+    # Verificar si existen columnas opcionales
     tiene_decimales <- "Decimales" %in% names(indicadores)
+    tiene_nivel <- "Nivel" %in% names(indicadores)
     
     resultado <- indicadores |>
       dplyr::select(
@@ -630,7 +639,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         seccion = Seccion,
         subcategoria = Subcategoria,
         orden_excel,
-        dplyr::any_of("Decimales")
+        dplyr::any_of(c("Decimales", "Nivel"))
       ) |>
       dplyr::mutate(
         indicador_nombre = ifelse(is.na(indicador_nombre), indicador_codigo, indicador_nombre),
@@ -645,9 +654,19 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       resultado$decimales <- 1L
     }
     
-    # Eliminar columna Decimales mayúscula si existe (para evitar duplicados)
+    # Añadir columna nivel normalizada (minúsculas)
+    if (tiene_nivel) {
+      resultado$nivel <- indicadores$Nivel
+    } else {
+      resultado$nivel <- 1L
+    }
+    
+    # Eliminar columnas mayúsculas si existen (para evitar duplicados)
     if ("Decimales" %in% names(resultado)) {
       resultado <- resultado |> dplyr::select(-Decimales)
+    }
+    if ("Nivel" %in% names(resultado)) {
+      resultado <- resultado |> dplyr::select(-Nivel)
     }
     
     return(resultado)
@@ -1733,10 +1752,10 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         codigo_pais <- "918"
       } else {
         tryCatch({
-          countries_wto <- wtor::get_countries()
-          codigo_pais <- countries_wto |>
-            dplyr::filter(iso3_code == pais_codigo_iso3) |>
-            dplyr::pull(country_code)
+          economies_wto <- wtor::get_reporting_economies()
+          codigo_pais <- economies_wto |>
+            dplyr::filter(iso3A == pais_codigo_iso3) |>
+            dplyr::pull(code)
           
           if (length(codigo_pais) == 0) {
             message("   ℹ País no encontrado en OMC")
@@ -1813,479 +1832,11 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
   }
   
   # ============================================================================
-  # OCDE - Datos de la Organización para la Cooperación y el Desarrollo
-  # NOTA: La API antigua (stats.oecd.org) fue deprecada. Usamos API SDMX y alternativas.
-  # ============================================================================
-  
-  # Lista de países miembros de la OCDE (códigos ISO3)
-  paises_ocde <- c(
-    "AUS", "AUT", "BEL", "CAN", "CHL", "COL", "CRI", "CZE", "DNK", "EST",
-    "FIN", "FRA", "DEU", "GRC", "HUN", "ISL", "IRL", "ISR", "ITA", "JPN",
-    "KOR", "LVA", "LTU", "LUX", "MEX", "NLD", "NZL", "NOR", "POL", "PRT",
-    "SVK", "SVN", "ESP", "SWE", "CHE", "TUR", "GBR", "USA"
-  )
-  
-  descargar_datos_ocde <- function(pais_codigo_iso2, fecha_inicio, fecha_fin) {
-    tryCatch({
-      # Convertir ISO2 a ISO3
-      pais_codigo_iso3 <- if (pais_codigo_iso2 %in% names(mapeo_iso2_iso3)) {
-        mapeo_iso2_iso3[pais_codigo_iso2]
-      } else {
-        tryCatch(
-          countrycode::countrycode(pais_codigo_iso2, "iso2c", "iso3c"),
-          error = function(e) NULL
-        )
-      }
-      
-      if (is.null(pais_codigo_iso3) || !(pais_codigo_iso3 %in% paises_ocde)) {
-        message("   ℹ País no es miembro de la OCDE")
-        return(NULL)
-      }
-      
-      anio_inicio <- lubridate::year(fecha_inicio)
-      anio_fin <- lubridate::year(fecha_fin)
-      datos_lista <- list()
-      
-      # Función helper para hacer requests con reintentos
-      hacer_request_ocde <- function(url, descripcion) {
-        for (intento in 1:2) {
-          tryCatch({
-            resp <- httr::GET(url, httr::timeout(45), 
-                              httr::add_headers(
-                                Accept = "application/vnd.sdmx.data+csv;version=2.0.0",
-                                `User-Agent` = "R/dictamen-economico"
-                              ))
-            
-            if (httr::status_code(resp) == 200) {
-              texto <- httr::content(resp, "text", encoding = "UTF-8")
-              if (nchar(texto) > 100 && !grepl("error", tolower(texto))) {
-                return(texto)
-              }
-            } else if (httr::status_code(resp) == 404) {
-              # No hay datos para este país/indicador
-              return(NULL)
-            }
-          }, error = function(e) {
-            if (intento == 1) Sys.sleep(1)
-          })
-        }
-        return(NULL)
-      }
-      
-      # Usar API SDMX de OCDE (nueva API)
-      base_url <- "https://sdmx.oecd.org/public/rest/data"
-      
-      # --- 1. PIB real anual (SNA_TABLE1) ---
-      tryCatch({
-        # Varias URLs alternativas para PIB
-        urls_gdp <- c(
-          paste0(base_url, "/OECD.SDD.NAD,DSD_NAMAIN1@DF_TABLE1_EXPENDITURE,1.0/",
-                 pais_codigo_iso3, ".A.B1GQ.V._Z.GY.USD_PPP?",
-                 "startPeriod=", anio_inicio, "&endPeriod=", anio_fin),
-          paste0(base_url, "/OECD.SDD.NAD,DSD_NAMAIN1@DF_TABLE1_EXPENDITURE,1.0/",
-                 pais_codigo_iso3, ".A.B1GQ.V._Z.GY?",
-                 "startPeriod=", anio_inicio, "&endPeriod=", anio_fin)
-        )
-        
-        texto <- NULL
-        for (url in urls_gdp) {
-          texto <- hacer_request_ocde(url, "PIB")
-          if (!is.null(texto)) break
-        }
-        
-        if (!is.null(texto)) {
-          datos_gdp <- tryCatch({
-            read.csv(text = texto, stringsAsFactors = FALSE)
-          }, error = function(e) NULL)
-          
-          if (!is.null(datos_gdp) && nrow(datos_gdp) > 0 && "OBS_VALUE" %in% names(datos_gdp)) {
-            datos_procesados <- datos_gdp |>
-              dplyr::mutate(
-                year = as.integer(TIME_PERIOD),
-                indicador_codigo = "OCDE_GDP",
-                indicador_nombre = "PIB real (OCDE)",
-                unidad_corta = "var. %",
-                unidad_larga = "Variación porcentual anual",
-                valor = as.numeric(OBS_VALUE),
-                country = pais_codigo_iso3,
-                iso2c = pais_codigo_iso2,
-                fuente = "OCDE",
-                prioridad_fuente = 2
-              ) |>
-              dplyr::filter(!is.na(valor)) |>
-              dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
-                            unidad_corta, unidad_larga, valor, fuente, prioridad_fuente)
-            
-            if (nrow(datos_procesados) > 0) {
-              datos_lista[["gdp"]] <- datos_procesados
-            }
-          }
-        }
-      }, error = function(e) NULL)
-      
-      # --- 2. Tasa de desempleo (KEI) ---
-      tryCatch({
-        urls_une <- c(
-          paste0(base_url, "/OECD.SDD.TPS,DSD_KEI@DF_KEI,4.0/",
-                 pais_codigo_iso3, ".A.LRUNTTTT...",
-                 "?startPeriod=", anio_inicio, "&endPeriod=", anio_fin),
-          paste0(base_url, "/OECD.SDD.TPS,DSD_LFS@DF_LFS_INDIC,1.0/",
-                 pais_codigo_iso3, ".A.UNE_LF_RATE._T._T.Y15T74._T?",
-                 "startPeriod=", anio_inicio, "&endPeriod=", anio_fin)
-        )
-        
-        texto <- NULL
-        for (url in urls_une) {
-          texto <- hacer_request_ocde(url, "Desempleo")
-          if (!is.null(texto)) break
-        }
-        
-        if (!is.null(texto)) {
-          datos_une <- tryCatch({
-            read.csv(text = texto, stringsAsFactors = FALSE)
-          }, error = function(e) NULL)
-          
-          if (!is.null(datos_une) && nrow(datos_une) > 0 && "OBS_VALUE" %in% names(datos_une)) {
-            datos_procesados <- datos_une |>
-              dplyr::mutate(
-                year = as.integer(TIME_PERIOD),
-                indicador_codigo = "OCDE_UNE",
-                indicador_nombre = "Tasa de desempleo (OCDE)",
-                unidad_corta = "%",
-                unidad_larga = "Porcentaje de la población activa",
-                valor = as.numeric(OBS_VALUE),
-                country = pais_codigo_iso3,
-                iso2c = pais_codigo_iso2,
-                fuente = "OCDE",
-                prioridad_fuente = 2
-              ) |>
-              dplyr::filter(!is.na(valor)) |>
-              dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
-                            unidad_corta, unidad_larga, valor, fuente, prioridad_fuente)
-            
-            if (nrow(datos_procesados) > 0) {
-              datos_lista[["une"]] <- datos_procesados
-            }
-          }
-        }
-      }, error = function(e) NULL)
-      
-      # --- 3. Inflación (PRICES_CPI) ---
-      tryCatch({
-        urls_cpi <- c(
-          paste0(base_url, "/OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,1.0/",
-                 pais_codigo_iso3, ".A.CPI.PA._T.N.GY",
-                 "?startPeriod=", anio_inicio, "&endPeriod=", anio_fin),
-          paste0(base_url, "/OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,1.0/",
-                 pais_codigo_iso3, ".A.CPI.PA._T.N.GY._T",
-                 "?startPeriod=", anio_inicio, "&endPeriod=", anio_fin)
-        )
-        
-        texto <- NULL
-        for (url in urls_cpi) {
-          texto <- hacer_request_ocde(url, "CPI")
-          if (!is.null(texto)) break
-        }
-        
-        if (!is.null(texto)) {
-          datos_cpi <- tryCatch({
-            read.csv(text = texto, stringsAsFactors = FALSE)
-          }, error = function(e) NULL)
-          
-          if (!is.null(datos_cpi) && nrow(datos_cpi) > 0 && "OBS_VALUE" %in% names(datos_cpi)) {
-            datos_procesados <- datos_cpi |>
-              dplyr::mutate(
-                year = as.integer(TIME_PERIOD),
-                indicador_codigo = "OCDE_CPI",
-                indicador_nombre = "Inflación (OCDE)",
-                unidad_corta = "var. %",
-                unidad_larga = "Variación porcentual anual",
-                valor = as.numeric(OBS_VALUE),
-                country = pais_codigo_iso3,
-                iso2c = pais_codigo_iso2,
-                fuente = "OCDE",
-                prioridad_fuente = 2
-              ) |>
-              dplyr::filter(!is.na(valor)) |>
-              dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
-                            unidad_corta, unidad_larga, valor, fuente, prioridad_fuente)
-            
-            if (nrow(datos_procesados) > 0) {
-              datos_lista[["cpi"]] <- datos_procesados
-            }
-          }
-        }
-      }, error = function(e) NULL)
-      
-      # --- 4. Tipo de interés a corto plazo (MEI/KEI) ---
-      tryCatch({
-        urls_ir <- c(
-          paste0(base_url, "/OECD.SDD.TPS,DSD_KEI@DF_KEI,4.0/",
-                 pais_codigo_iso3, ".A.IR3TIB...",
-                 "?startPeriod=", anio_inicio, "&endPeriod=", anio_fin),
-          paste0(base_url, "/OECD.SDD.TPS,DSD_KEI@DF_KEI,4.0/",
-                 pais_codigo_iso3, ".A.IRSTCI...",
-                 "?startPeriod=", anio_inicio, "&endPeriod=", anio_fin)
-        )
-        
-        texto <- NULL
-        for (url in urls_ir) {
-          texto <- hacer_request_ocde(url, "Tipos interés")
-          if (!is.null(texto)) break
-        }
-        
-        if (!is.null(texto)) {
-          datos_ir <- tryCatch({
-            read.csv(text = texto, stringsAsFactors = FALSE)
-          }, error = function(e) NULL)
-          
-          if (!is.null(datos_ir) && nrow(datos_ir) > 0 && "OBS_VALUE" %in% names(datos_ir)) {
-            datos_procesados <- datos_ir |>
-              dplyr::mutate(
-                year = as.integer(TIME_PERIOD),
-                indicador_codigo = "OCDE_IR3M",
-                indicador_nombre = "Tipo de interés a 3 meses (OCDE)",
-                unidad_corta = "%",
-                unidad_larga = "Porcentaje anual",
-                valor = as.numeric(OBS_VALUE),
-                country = pais_codigo_iso3,
-                iso2c = pais_codigo_iso2,
-                fuente = "OCDE",
-                prioridad_fuente = 2
-              ) |>
-              dplyr::filter(!is.na(valor)) |>
-              dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
-                            unidad_corta, unidad_larga, valor, fuente, prioridad_fuente)
-            
-            if (nrow(datos_procesados) > 0) {
-              datos_lista[["ir"]] <- datos_procesados
-            }
-          }
-        }
-      }, error = function(e) NULL)
-      
-      if (length(datos_lista) == 0) {
-        message("   ℹ OCDE: No se obtuvieron datos (API puede estar temporalmente no disponible)")
-        return(NULL)
-      }
-      
-      resultado <- dplyr::bind_rows(datos_lista)
-      return(resultado)
-      
-    }, error = function(e) {
-      message("   ⚠ Error OCDE: ", e$message)
-      return(NULL)
-    })
-  }
-  
-  # ============================================================================
-  # DBnomics - Agregador de múltiples fuentes
-  # ============================================================================
-  
-  descargar_datos_dbnomics <- function(pais_codigo_iso2, fecha_inicio, fecha_fin) {
-    tryCatch({
-      if (!requireNamespace("rdbnomics", quietly = TRUE)) {
-        message("Paquete rdbnomics no disponible")
-        return(NULL)
-      }
-      
-      # Convertir ISO2 a ISO3
-      pais_codigo_iso3 <- if (pais_codigo_iso2 %in% names(mapeo_iso2_iso3)) {
-        mapeo_iso2_iso3[pais_codigo_iso2]
-      } else {
-        tryCatch(
-          countrycode::countrycode(pais_codigo_iso2, "iso2c", "iso3c"),
-          error = function(e) NULL
-        )
-      }
-      
-      if (is.null(pais_codigo_iso3)) {
-        message("No se pudo convertir código de país para DBnomics")
-        return(NULL)
-      }
-      
-      anio_inicio <- lubridate::year(fecha_inicio)
-      anio_fin <- lubridate::year(fecha_fin)
-      datos_lista <- list()
-      
-      # --- 1. PIB desde Eurostat via DBnomics ---
-      tryCatch({
-        serie_id <- paste0("Eurostat/namq_10_gdp/A.CLV_PCH_PRE.SCA.B1GQ.", pais_codigo_iso2)
-        datos_pib <- rdbnomics::rdb(ids = serie_id)
-        
-        if (!is.null(datos_pib) && nrow(datos_pib) > 0) {
-          datos_pib <- datos_pib |>
-            dplyr::mutate(year = as.integer(substr(period, 1, 4))) |>
-            dplyr::filter(year >= anio_inicio & year <= anio_fin) |>
-            dplyr::mutate(
-              indicador_codigo = "DBN_GDP",
-              indicador_nombre = "PIB real (DBnomics)",
-              unidad_corta = "var. %",
-              unidad_larga = "Variación porcentual anual",
-              valor = as.numeric(value),
-              country = pais_codigo_iso3,
-              iso2c = pais_codigo_iso2,
-              fuente = "DBnomics",
-              prioridad_fuente = 6
-            ) |>
-            dplyr::filter(!is.na(valor)) |>
-            dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
-                          unidad_corta, unidad_larga, valor, fuente, prioridad_fuente)
-          
-          if (nrow(datos_pib) > 0) {
-            datos_lista[["pib"]] <- datos_pib
-          }
-        }
-      }, error = function(e) {
-        message("DBnomics PIB error: ", e$message)
-      })
-      
-      # --- 2. Inflación desde IMF via DBnomics ---
-      tryCatch({
-        serie_id <- paste0("IMF/CPI/A.", pais_codigo_iso3, ".PCPI_IX")
-        datos_cpi <- rdbnomics::rdb(ids = serie_id)
-        
-        if (!is.null(datos_cpi) && nrow(datos_cpi) > 0) {
-          datos_cpi <- datos_cpi |>
-            dplyr::mutate(year = as.integer(substr(period, 1, 4))) |>
-            dplyr::filter(year >= anio_inicio & year <= anio_fin) |>
-            dplyr::mutate(
-              indicador_codigo = "DBN_CPI",
-              indicador_nombre = "IPC (DBnomics)",
-              unidad_corta = "índice",
-              unidad_larga = "Índice de precios al consumo",
-              valor = as.numeric(value),
-              country = pais_codigo_iso3,
-              iso2c = pais_codigo_iso2,
-              fuente = "DBnomics",
-              prioridad_fuente = 6
-            ) |>
-            dplyr::filter(!is.na(valor)) |>
-            dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
-                          unidad_corta, unidad_larga, valor, fuente, prioridad_fuente)
-          
-          if (nrow(datos_cpi) > 0) {
-            datos_lista[["cpi"]] <- datos_cpi
-          }
-        }
-      }, error = function(e) {
-        message("DBnomics CPI error: ", e$message)
-      })
-      
-      # --- 3. Desempleo desde OECD via DBnomics ---
-      tryCatch({
-        serie_id <- paste0("OECD/MEI/", pais_codigo_iso3, ".LRHUTTTT.STSA.A")
-        datos_une <- rdbnomics::rdb(ids = serie_id)
-        
-        if (!is.null(datos_une) && nrow(datos_une) > 0) {
-          datos_une <- datos_une |>
-            dplyr::mutate(year = as.integer(substr(period, 1, 4))) |>
-            dplyr::filter(year >= anio_inicio & year <= anio_fin) |>
-            dplyr::mutate(
-              indicador_codigo = "DBN_UNE",
-              indicador_nombre = "Tasa de desempleo (DBnomics)",
-              unidad_corta = "%",
-              unidad_larga = "Porcentaje de la población activa",
-              valor = as.numeric(value),
-              country = pais_codigo_iso3,
-              iso2c = pais_codigo_iso2,
-              fuente = "DBnomics",
-              prioridad_fuente = 6
-            ) |>
-            dplyr::filter(!is.na(valor)) |>
-            dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
-                          unidad_corta, unidad_larga, valor, fuente, prioridad_fuente)
-          
-          if (nrow(datos_une) > 0) {
-            datos_lista[["une"]] <- datos_une
-          }
-        }
-      }, error = function(e) {
-        message("DBnomics UNE error: ", e$message)
-      })
-      
-      # --- 4. Tipos de interés desde BIS via DBnomics ---
-      tryCatch({
-        serie_id <- paste0("BIS/WS_CBPOL/D.", pais_codigo_iso2, "..")
-        datos_ir <- rdbnomics::rdb(ids = serie_id)
-        
-        if (!is.null(datos_ir) && nrow(datos_ir) > 0) {
-          # Agregar a datos anuales (promedio)
-          datos_ir <- datos_ir |>
-            dplyr::mutate(year = as.integer(substr(period, 1, 4))) |>
-            dplyr::filter(year >= anio_inicio & year <= anio_fin) |>
-            dplyr::group_by(year) |>
-            dplyr::summarise(valor = mean(as.numeric(value), na.rm = TRUE), .groups = "drop") |>
-            dplyr::mutate(
-              indicador_codigo = "DBN_IR",
-              indicador_nombre = "Tipo de interés oficial (DBnomics)",
-              unidad_corta = "%",
-              unidad_larga = "Porcentaje anual",
-              country = pais_codigo_iso3,
-              iso2c = pais_codigo_iso2,
-              fuente = "DBnomics",
-              prioridad_fuente = 6
-            ) |>
-            dplyr::filter(!is.na(valor)) |>
-            dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
-                          unidad_corta, unidad_larga, valor, fuente, prioridad_fuente)
-          
-          if (nrow(datos_ir) > 0) {
-            datos_lista[["ir"]] <- datos_ir
-          }
-        }
-      }, error = function(e) {
-        message("DBnomics IR error: ", e$message)
-      })
-      
-      if (length(datos_lista) == 0) return(NULL)
-      
-      resultado <- dplyr::bind_rows(datos_lista)
-      return(resultado)
-      
-    }, error = function(e) {
-      message("Error general DBnomics: ", e$message)
-      return(NULL)
-    })
-  }
-  
-  # ============================================================================
   # FUNCIÓN COMBINADA
   # ============================================================================
   
-  # Función auxiliar para obtener nombre canónico de indicadores equivalentes
-  obtener_nombre_canonico <- function(nombre_indicador) {
-    # Mapeo de indicadores equivalentes entre fuentes
-    equivalencias <- list(
-      "PIB real" = c("PIB real", "PIB real (OCDE)", "PIB real (DBnomics)", "GDP constant prices"),
-      "PIB nominal" = c("PIB nominal", "GDP current prices"),
-      "Tasa de desempleo" = c("Tasa de desempleo", "Tasa de desempleo (OCDE)", "Tasa de desempleo (DBnomics)", "Desempleo nacional"),
-      "Tasa de empleo" = c("Tasa de empleo", "Ratio empleo-población"),
-      "Tasa de variación interanual del IPC promedio" = c("Tasa de variación interanual del IPC promedio", 
-                                                          "Inflación (IPC)", "Inflación (OCDE)", "HICP Inflación", 
-                                                          "Inflación anual IPC", "Inflación anual (CPI)",
-                                                          "Tasa de variación interanual del IPC promedio (CPI)"),
-      "Deuda pública bruta" = c("Deuda pública", "Deuda pública (% PIB)", "Deuda pública bruta"),
-      "Saldo fiscal" = c("Saldo público", "Saldo fiscal (% PIB)", "Saldo fiscal"),
-      "Exportaciones" = c("Exportaciones de bienes y servicios", "Exportaciones de bienes FOB", "Exportaciones", "Exportaciones (OCDE)"),
-      "Importaciones" = c("Importaciones de bienes y servicios", "Importaciones de bienes CIF", "Importaciones", "Importaciones (OCDE)"),
-      "Cuenta corriente" = c("Balanza por cuenta corriente", "Balanza cuenta corriente", "Cuenta corriente", 
-                             "Cuenta corriente (BOP)", "Cuenta corriente (OCDE)"),
-      "Tipo de cambio efectivo real" = c("Tipo de cambio efectivo real", "Tipo de cambio efectivo real (FMI)", 
-                                         "REER_BIS_BROAD", "EREER_IX"),
-      "Tipo de cambio efectivo nominal" = c("Tipo de cambio efectivo nominal", "Tipo de cambio efectivo nominal (FMI)",
-                                            "NEER_BIS_BROAD", "ENEER_IX")
-    )
-    
-    for (nombre_canonico in names(equivalencias)) {
-      if (nombre_indicador %in% equivalencias[[nombre_canonico]]) {
-        return(nombre_canonico)
-      }
-    }
-    return(nombre_indicador)
-  }
-  
   # Función de deduplicación por prioridad de fuente
+  # Usa directamente indicador_nombre ya que los indicadores vienen del Excel
   deduplicar_por_prioridad <- function(datos) {
     if (is.null(datos) || nrow(datos) == 0) return(datos)
     
@@ -2294,23 +1845,16 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       datos$prioridad_fuente <- 99
     }
     
-    # Añadir nombre canónico para agrupar indicadores equivalentes
-    datos <- datos |>
-      dplyr::mutate(
-        nombre_canonico = sapply(indicador_nombre, obtener_nombre_canonico)
-      )
-    
     # Contar registros antes de deduplicar
     n_antes <- nrow(datos)
     
     # Deduplicar: mantener el registro con menor prioridad_fuente (mayor prioridad)
-    # para cada combinación de nombre_canonico + year + unidad_corta
+    # para cada combinación de indicador_nombre + year + unidad_corta
     datos_dedup <- datos |>
-      dplyr::arrange(nombre_canonico, year, unidad_corta, prioridad_fuente) |>
-      dplyr::group_by(nombre_canonico, year, unidad_corta) |>
+      dplyr::arrange(indicador_nombre, year, unidad_corta, prioridad_fuente) |>
+      dplyr::group_by(indicador_nombre, year, unidad_corta) |>
       dplyr::slice(1) |>
-      dplyr::ungroup() |>
-      dplyr::select(-nombre_canonico)
+      dplyr::ungroup()
     
     n_despues <- nrow(datos_dedup)
     n_eliminados <- n_antes - n_despues
@@ -2520,7 +2064,6 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
                                          usar_omc = TRUE,
                                          usar_bis = TRUE,
                                          usar_eurostat = TRUE,
-                                         usar_ocde = TRUE,
                                          actualizar_progreso = NULL) {
     datos_lista <- list()
     resumen_fuentes <- list()
@@ -2534,7 +2077,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     }
     
     # Contar fuentes activas para calcular incrementos
-    n_fuentes <- sum(c(usar_fmi, usar_eurostat, usar_ocde, usar_bm, usar_omc, usar_bis))
+    n_fuentes <- sum(c(usar_fmi, usar_eurostat, usar_bm, usar_omc, usar_bis))
     incremento <- if (n_fuentes > 0) 0.7 / n_fuentes else 0
     progreso_actual <- 0.1
     
@@ -2583,26 +2126,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       progreso_actual <- progreso_actual + incremento
     }
     
-    # 3. OCDE - Prioridad 2
-    if (usar_ocde) {
-      progreso(progreso_actual, "Descargando OCDE...")
-      datos_ocde <- tryCatch({
-        descargar_datos_ocde(pais_codigo, fecha_inicio, fecha_fin)
-      }, error = function(e) {
-        message("     ⚠ OCDE: ", e$message)
-        NULL
-      })
-      if (!is.null(datos_ocde) && nrow(datos_ocde) > 0) {
-        datos_lista$ocde <- datos_ocde
-        resumen_fuentes$OCDE <- nrow(datos_ocde)
-        message(paste0("✓ OCDE: ", nrow(datos_ocde), " registros"))
-      } else {
-        message("   ℹ OCDE: sin datos (país no miembro o error de conexión)")
-      }
-      progreso_actual <- progreso_actual + incremento
-    }
-    
-    # 4. Banco Mundial - Prioridad 3
+    # 3. Banco Mundial - Prioridad 3
     if (usar_bm) {
       progreso(progreso_actual, "Descargando Banco Mundial (WDI)...")
       datos_bm <- descargar_datos_bm(pais_codigo, fecha_inicio, fecha_fin)
@@ -2665,15 +2189,36 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       if (!is.null(indicadores_excel) && "indicador_codigo" %in% names(df)) {
         # Crear mapeo desde Excel
         excel_info <- indicadores_excel |>
-          dplyr::select(Codigo, Seccion, Subcategoria, orden_excel, Nombre_ES, Unidad) |>
+          dplyr::select(Codigo, Seccion, Subcategoria, orden_excel, Nombre_ES, Unidad, 
+                        dplyr::any_of(c("Decimales", "Nivel"))) |>
           dplyr::rename(indicador_codigo = Codigo)
         
         # Añadir info del Excel si falta
         if (!"seccion" %in% names(df)) {
+          cols_join <- c("indicador_codigo", "seccion" = "Seccion", 
+                         "subcategoria" = "Subcategoria", "orden_excel")
           df <- df |>
             dplyr::left_join(
               excel_info |> dplyr::select(indicador_codigo, seccion = Seccion, 
                                           subcategoria = Subcategoria, orden_excel),
+              by = "indicador_codigo"
+            )
+        }
+        
+        # Añadir nivel desde Excel si existe y no está en df
+        if (!"nivel" %in% names(df) && "Nivel" %in% names(excel_info)) {
+          df <- df |>
+            dplyr::left_join(
+              excel_info |> dplyr::select(indicador_codigo, nivel = Nivel),
+              by = "indicador_codigo"
+            )
+        }
+        
+        # Añadir decimales desde Excel si existe y no está en df
+        if (!"decimales" %in% names(df) && "Decimales" %in% names(excel_info)) {
+          df <- df |>
+            dplyr::left_join(
+              excel_info |> dplyr::select(indicador_codigo, decimales = Decimales),
               by = "indicador_codigo"
             )
         }
@@ -2696,6 +2241,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       if (!"seccion" %in% names(df)) df$seccion <- NA_character_
       if (!"subcategoria" %in% names(df)) df$subcategoria <- NA_character_
       if (!"orden_excel" %in% names(df)) df$orden_excel <- NA_integer_
+      if (!"nivel" %in% names(df)) df$nivel <- 1L
+      if (!"decimales" %in% names(df)) df$decimales <- 1L
       
       return(df)
     })
@@ -3188,6 +2735,13 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         datos_tabla <- datos_tabla |> dplyr::select(-decimales)
       }
       
+      # Guardar columna de nivel si existe antes de eliminarla
+      nivel_por_fila <- NULL
+      if ("nivel" %in% names(datos_tabla)) {
+        nivel_por_fila <- datos_tabla$nivel
+        datos_tabla <- datos_tabla |> dplyr::select(-nivel)
+      }
+      
       cols_nombres <- names(datos_tabla)
       n_cols <- ncol(datos_tabla)
       
@@ -3287,6 +2841,20 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         # Línea inferior de la tabla
         flextable::hline_bottom(part = "body", border = borde_verde)
       
+      # Aplicar sangría según el nivel (si existe)
+      # Nivel 1: sin sangría (0cm), Nivel 2: +0.5cm, Nivel 3: +1cm
+      if (!is.null(nivel_por_fila)) {
+        for (i in seq_along(nivel_por_fila)) {
+          niv <- nivel_por_fila[i]
+          if (!is.na(niv) && niv > 1) {
+            # Calcular padding izquierdo en puntos (0.5cm = ~14 puntos por cada nivel adicional)
+            padding_left <- (niv - 1) * 14
+            ft <- ft |>
+              flextable::padding(i = i, j = 1, padding.left = padding_left + 3, part = "body")
+          }
+        }
+      }
+      
       # Ajustar anchos de columna
       # Columna Indicador: 7cm (aproximadamente 2.76 pulgadas)
       # En landscape A4: ancho útil ≈ 27cm (29.7 - 2.7 de márgenes)
@@ -3367,7 +2935,21 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
               # Crear y añadir tabla con flextable (sin la columna subcategoria)
               ft <- crear_flextable(as.data.frame(datos_subcat), es_primera_tabla)
               doc <- doc |>
-                flextable::body_add_flextable(ft) |>
+                flextable::body_add_flextable(ft)
+              
+              # Añadir nota sobre tipos de cambio si es la subcategoría correspondiente
+              if (grepl("Competitividad|tipos de cambio", subcat_nombre, ignore.case = TRUE)) {
+                nota_tc <- "Nota: Los tipos de cambio efectivos (TCER/TCEN) están denominados de tal manera que un aumento implica una apreciación. El tipo de cambio oficial frente al dólar está expresado en UML/USD, por lo que un aumento implica una depreciación de la moneda local frente al dólar estadounidense."
+                doc <- doc |>
+                  officer::body_add_fpar(
+                    officer::fpar(
+                      officer::ftext(nota_tc, 
+                                     prop = officer::fp_text(font.size = 8, italic = TRUE, color = "#666666"))
+                    )
+                  )
+              }
+              
+              doc <- doc |>
                 officer::body_add_par("")
               
               es_primera_tabla <- FALSE
@@ -3785,11 +3367,10 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
                     "FMI (WEO, FM, BOP, FSI)" = "fmi",
                     "Banco Mundial (WDI)" = "bm",
                     "Eurostat (UE)" = "eurostat",
-                    "OCDE" = "ocde",
                     "OMC" = "omc",
                     "BIS" = "bis"
                   ),
-                  selected = c("fmi", "bm", "eurostat", "ocde", "omc", "bis"),
+                  selected = c("fmi", "bm", "eurostat", "omc", "bis"),
                   inline = FALSE,
                   width = "100%"
                 ),
@@ -3797,8 +3378,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
                   class = "text-muted",
                   "Solo se descargan indicadores del Excel para las fuentes seleccionadas."
                 ),
-                uiOutput("alerta_eurostat"),
-                uiOutput("alerta_ocde")
+                uiOutput("alerta_eurostat")
               )
             ),
             
@@ -3828,7 +3408,16 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
             navset_tab(
               nav_panel("Sector real", DT::DTOutput("tabla_sector_real")),
               nav_panel("Mercado laboral", DT::DTOutput("tabla_mercado_laboral")),
-              nav_panel("Sector exterior", DT::DTOutput("tabla_sector_exterior")),
+              nav_panel("Sector exterior", 
+                        div(
+                          DT::DTOutput("tabla_sector_exterior"),
+                          tags$p(
+                            class = "text-muted small mt-2 fst-italic",
+                            tags$strong("Nota:"), 
+                            " Los tipos de cambio efectivos (TCER/TCEN) están denominados de tal manera que un aumento implica una apreciación. El tipo de cambio oficial frente al dólar está expresado en UML/USD, por lo que un aumento implica una depreciación de la moneda local frente al dólar estadounidense."
+                          )
+                        )
+              ),
               nav_panel("Sector público", DT::DTOutput("tabla_sector_publico")),
               nav_panel("Indicadores monetarios y financieros", DT::DTOutput("tabla_precios_monetarios")),
               nav_panel("Pro-memoria", DT::DTOutput("tabla_promemoria"))
@@ -3905,40 +3494,60 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           )
         ),
         
-        # Resumen por fuente
+        # Resumen por fuente (con enlaces a las fuentes)
         layout_columns(
           col_widths = c(2, 2, 2, 2, 2, 2),
           class = "mt-3",
           
-          value_box(
-            title = "FMI",
-            value = textOutput("n_fmi"),
-            showcase = icon("university"),
-            theme = "warning"
+          tags$a(
+            href = "https://data.imf.org/", target = "_blank",
+            style = "text-decoration: none;",
+            value_box(
+              title = "FMI",
+              value = textOutput("n_fmi"),
+              showcase = icon("university"),
+              theme = "warning"
+            )
           ),
-          value_box(
-            title = "Banco Mundial",
-            value = textOutput("n_bm"),
-            showcase = icon("globe"),
-            theme = "info"
+          tags$a(
+            href = "https://databank.worldbank.org/source/world-development-indicators", target = "_blank",
+            style = "text-decoration: none;",
+            value_box(
+              title = "Banco Mundial",
+              value = textOutput("n_bm"),
+              showcase = icon("globe"),
+              theme = "info"
+            )
           ),
-          value_box(
-            title = "Eurostat",
-            value = textOutput("n_eurostat"),
-            showcase = icon("flag"),
-            theme = "primary"
+          tags$a(
+            href = "https://ec.europa.eu/eurostat/data/database", target = "_blank",
+            style = "text-decoration: none;",
+            value_box(
+              title = "Eurostat",
+              value = textOutput("n_eurostat"),
+              showcase = icon("flag"),
+              theme = "primary"
+            )
           ),
-          value_box(
-            title = "OMC",
-            value = textOutput("n_omc"),
-            showcase = icon("balance-scale"),
-            theme = "success"
+          tags$a(
+            href = "https://stats.wto.org/", target = "_blank",
+            style = "text-decoration: none;",
+            value_box(
+              title = "OMC",
+              value = textOutput("n_omc"),
+              showcase = icon("balance-scale"),
+              theme = "success"
+            )
           ),
-          value_box(
-            title = "BIS",
-            value = textOutput("n_bis"),
-            showcase = icon("chart-line"),
-            theme = "secondary"
+          tags$a(
+            href = "https://www.bis.org/statistics/index.htm", target = "_blank",
+            style = "text-decoration: none;",
+            value_box(
+              title = "BIS",
+              value = textOutput("n_bis"),
+              showcase = icon("chart-line"),
+              theme = "secondary"
+            )
           ),
           value_box(
             title = "Total",
@@ -3946,7 +3555,13 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
             showcase = icon("database"),
             theme = "dark"
           )
-        )
+        )#,
+        # value_box(
+        #   title = "Total indicadores",
+        #   value = textOutput("n_total"),
+        #   showcase = icon("database"),
+        #   theme = "dark"
+        # )
       )
     ),
     
@@ -4094,7 +3709,6 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     bandera_actual <- reactiveVal("")
     resumen_fuentes <- reactiveVal(NULL)
     es_pais_ue <- reactiveVal(TRUE)
-    es_pais_ocde <- reactiveVal(TRUE) 
     iso3_actual <- reactiveVal("")  # Código ISO3 del país actual
     
     # =========================================================================
@@ -4249,52 +3863,19 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       pais_en_ue <- iso2 %in% paises_ue
       es_pais_ue(pais_en_ue)
       
-      # Verificar si el país es de la OCDE
-      pais_en_ocde <- !is.null(pais_iso3) && pais_iso3 %in% paises_ocde
-      es_pais_ocde(pais_en_ocde)
-      
-      if (!pais_en_ocde & !pais_en_ue) {
-        # Primero deseleccionar
-        fuentes_actuales <- input$fuentes_datos
-        fuentes_sin_ocde_y_sin_eurostat <- setdiff(fuentes_actuales, c("eurostat","ocde"))
-        updateCheckboxGroupInput(session, "fuentes_datos", selected = fuentes_sin_ocde_y_sin_eurostat)
-        # Luego deshabilitar con un pequeño delay
-        shinyjs::delay(100, shinyjs::disable(selector = "input[value='eurostat']"))
-        # Luego deshabilitar con un pequeño delay
-        shinyjs::delay(100, shinyjs::disable(selector = "input[value='ocde']"))
-      } else if (!pais_en_ocde){
-        fuentes_actuales <- input$fuentes_datos
-        fuentes_sin_ocde <- setdiff(fuentes_actuales, "ocde")
-        updateCheckboxGroupInput(session, "fuentes_datos", selected = fuentes_sin_ocde)
-        # Luego deshabilitar con un pequeño delay
-        shinyjs::delay(100, shinyjs::disable(selector = "input[value='ocde']"))
-      } else if (!pais_en_ue){
-        # Primero deseleccionar
+      if (!pais_en_ue) {
+        # Deseleccionar Eurostat
         fuentes_actuales <- input$fuentes_datos
         fuentes_sin_eurostat <- setdiff(fuentes_actuales, "eurostat")
         updateCheckboxGroupInput(session, "fuentes_datos", selected = fuentes_sin_eurostat)
-        # Luego deshabilitar con un pequeño delay
+        # Deshabilitar con un pequeño delay
         shinyjs::delay(100, shinyjs::disable(selector = "input[value='eurostat']"))
-      }
-      
-      if (pais_en_ue & pais_en_ocde) {
-        shinyjs::enable(selector = "input[value='eurostat']")
-        shinyjs::enable(selector = "input[value='ocde']")
-        fuentes_actuales <- input$fuentes_datos
-        if (!("eurostat" %in% fuentes_actuales)) {
-          updateCheckboxGroupInput(session, "fuentes_datos", selected = c(fuentes_actuales, c("eurostat", "ocde")))
-        }
-      } else if (pais_en_ue){
+      } else {
+        # Habilitar Eurostat
         shinyjs::enable(selector = "input[value='eurostat']")
         fuentes_actuales <- input$fuentes_datos
         if (!("eurostat" %in% fuentes_actuales)) {
           updateCheckboxGroupInput(session, "fuentes_datos", selected = c(fuentes_actuales, "eurostat"))
-        }
-      } else if (pais_en_ocde) {
-        shinyjs::enable(selector = "input[value='ocde']")
-        fuentes_actuales <- input$fuentes_datos
-        if (!("ocde" %in% fuentes_actuales)) {
-          updateCheckboxGroupInput(session, "fuentes_datos", selected = c(fuentes_actuales, "ocde"))
         }
       }
     })
@@ -4310,25 +3891,11 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       }
     })
     
-    # Alerta de OCDE
-    output$alerta_ocde <- renderUI({
-      if (!es_pais_ocde()) {
-        div(
-          class = "alert alert-warning mt-2 py-1",
-          style = "font-size: 0.85rem;",
-          icon("info-circle"), " OCDE solo disponible para países miembros"
-        )
-      }
-    })
-    
     # Botones seleccionar/deseleccionar todas
     observeEvent(input$btn_seleccionar_todas, {
-      fuentes_base <- c("fmi", "bm", "omc", "bis", "dbnomics")
+      fuentes_base <- c("fmi", "bm", "omc", "bis")
       if (es_pais_ue()) {
         fuentes_base <- c(fuentes_base, "eurostat")
-      }
-      if (es_pais_ocde()) {
-        fuentes_base <- c(fuentes_base, "ocde")
       }
       updateCheckboxGroupInput(session, "fuentes_datos", selected = fuentes_base)
     })
@@ -4498,10 +4065,9 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         usar_omc <- "omc" %in% input$fuentes_datos
         usar_bis <- "bis" %in% input$fuentes_datos
         usar_eurostat <- "eurostat" %in% input$fuentes_datos && es_pais_ue()
-        usar_ocde <- "ocde" %in% input$fuentes_datos && es_pais_ocde()
         
         # Contar fuentes activas para calcular incrementos
-        n_fuentes <- sum(c(usar_fmi, usar_eurostat, usar_ocde, usar_bm, usar_omc, usar_bis))
+        n_fuentes <- sum(c(usar_fmi, usar_eurostat, usar_bm, usar_omc, usar_bis))
         incremento_por_fuente <- if (n_fuentes > 0) 0.70 / n_fuentes else 0
         progreso_acumulado <- 0.05
         
@@ -4521,7 +4087,6 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           usar_omc = usar_omc,
           usar_bis = usar_bis,
           usar_eurostat = usar_eurostat,
-          usar_ocde = usar_ocde,
           actualizar_progreso = actualizar_progreso
         )
         

@@ -1,0 +1,313 @@
+"title","code","type","last.update.of.data","last.table.structure.change","data.start","data.end","values","hierarchy"
+"Short-stay accommodation offered via collaborative economy platforms by months, residence of the guest and NUTS 1 and NUTS 2 region - experimental statistics","tour_ce_omn12","dataset","01.10.2025","01.10.2025","2018","2025",325632,5
+"Households with access to the internet at home","isoc_r_iacc_h","dataset","16.12.2025","16.12.2025","2006","2025",5818,5
+"Individuals who used the internet, frequency of use and activities","isoc_r_iuse_i","dataset","16.12.2025","16.12.2025","2006","2025",65789,5
+"Individuals who used the internet for interaction with public authorities","isoc_r_gov_i","dataset","16.12.2025","16.12.2025","2008","2025",16706,5
+"Individuals who ordered goods or services over the internet for private use","isoc_r_blt12_i","dataset","16.12.2025","16.12.2025","2006","2025",68468,5
+"Use of computers and the internet by employees, by NACE Rev. 2 activity and NUTS 2 region","isoc_r_ci_cm_pn2","dataset","11.12.2025","11.12.2025","2023","2025",5091,5
+"Internet access by NACE Rev. 2 activity and NUTS 2 region","isoc_r_ci_in_en2","dataset","11.12.2025","11.12.2025","2023","2025",20979,5
+"Type of connections to the internet by NACE Rev. 2 activity and NUTS 2 region","isoc_r_ci_it_en2","dataset","11.12.2025","11.12.2025","2023","2025",117226,5
+"Cloud computing services by NACE Rev. 2 activity and NUTS 2 region","isoc_r_cicce_usen2","dataset","11.12.2025","11.12.2025","2023","2025",7120,5
+"Artificial intelligence by NACE Rev. 2 activity and NUTS 2 region","isoc_r_eb_ain2","dataset","16.12.2025","16.12.2025","2023","2025",115578,5
+"Integration of internal processes by NACE Rev. 2 activity and NUTS 2 region","isoc_r_eb_iipn2","dataset","11.12.2025","11.12.2025","2023","2025",27310,5
+"E-commerce sales of enterprises by NACE Rev. 2 activity and NUTS 2 region","isoc_r_ec_eseln2","dataset","11.12.2025","11.12.2025","2023","2025",10012,5
+"Value of e-commerce sales by NACE Rev. 2 activity and NUTS 2 region","isoc_r_ec_evaln2","dataset","11.12.2025","11.12.2025","2023","2025",4699,5
+"Data analytics by NACE Rev. 2 activity and NUTS 2 region","isoc_r_eb_dan2","dataset","16.12.2025","16.12.2025","2023","2025",16468,5
+"Persons at risk of poverty or social exclusion by NUTS 2 region","ilc_peps11n","dataset","22.12.2025","22.12.2025","2015","2025",2717,4
+"At-risk-of-poverty rate by NUTS 2 region","ilc_li41","dataset","22.12.2025","22.12.2025","2003","2025",4474,4
+"Persons living in households with very low work intensity by NUTS 2 region (population aged 0 to 64 years)","ilc_lvhl21n","dataset","22.12.2025","22.12.2025","2014","2025",2720,4
+"Severe material and social deprivation by NUTS 2 region","ilc_mdsd18","dataset","22.12.2025","22.12.2025","2014","2025",2585,4
+"Area by NUTS 3 region","reg_area3","dataset","14.02.2025","14.02.2025","2013","2025",50224,3
+"Population on 1st January by age, sex, type of projection and metropolitan region","met_proj_19rp","dataset","20.12.2022","20.12.2022","2019","2100",67650,5
+"Assumptions for net migration by age, sex, type of projection and metropolitan region","met_proj_19ranmig","dataset","20.12.2022","20.12.2022","2019","2100",67650,5
+"Projected deaths by age, sex, type of projection and metropolitan region","met_proj_19rdth","dataset","20.12.2022","20.12.2022","2019","2100",67650,5
+"Demographic balances and indicators by type of projection and metropolitan region","met_proj_19rdbi","dataset","20.12.2022","20.12.2022","2019","2100",135300,5
+"Area of the regions by other typologies","urt_d3area","dataset","12.06.2025","12.06.2025","1990","2025",17315,5
+"Population on 1st January by age, sex, type of projection and other typologies","urt_proj_19rp","dataset","20.12.2022","20.12.2022","2019","2100",86346,5
+"Assumptions for net migration by age, sex, type of projection and other typologies","urt_proj_19ranmig","dataset","20.12.2022","20.12.2022","2019","2100",86346,5
+"Projected deaths by age, sex, type of projection and other typologies","urt_proj_19rdth","dataset","20.12.2022","20.12.2022","2019","2100",86346,5
+"Demographic balances and indicators by type of projection and other typologies","urt_proj_19rdbi","dataset","20.12.2022","20.12.2022","2019","2100",172692,5
+"At-risk-of-poverty rate after deducting housing costs by degree of urbanisation","ilc_li48","dataset","22.12.2025","22.12.2025","2003","2025",2970,4
+"Mean and median income by degree of urbanisation","ilc_di17","dataset","22.12.2025","22.12.2025","2003","2025",271944,4
+"Share of people having income greater or equal to specific national thresholds by degree of urbanisation","ilc_di23","dataset","22.12.2025","22.12.2025","2003","2025",20874,4
+"Overcrowding rate by degree of urbanisation - total population","ilc_lvho05d","dataset","22.12.2025","22.12.2025","2003","2025",2241,4
+"Share of people living in under-occupied dwellings by degree of urbanisation - total population","ilc_lvho50d","dataset","22.12.2025","22.12.2025","2003","2025",2238,4
+"Housing cost overburden rate by degree of urbanisation","ilc_lvho07d","dataset","22.12.2025","22.12.2025","2003","2025",2199,4
+"Distribution of population by housing cost burden and degree of urbanisation","ilc_lvho29","dataset","22.12.2025","22.12.2025","2003","2025",10995,4
+"Median of the housing cost burden distribution by degree of urbanisation","ilc_lvho08b","dataset","22.12.2025","22.12.2025","2003","2025",2190,4
+"Material and social deprivation rate by degree of urbanisation","ilc_mdsd09","dataset","22.12.2025","22.12.2025","2014","2025",1668,4
+"Individuals - devices used to access the internet","isoc_ci_dev_i","dataset","16.12.2025","16.12.2025","2016","2025",287272,6
+"Households - level of internet access","isoc_ci_in_h","dataset","16.12.2025","16.12.2025","2002","2025",11757,6
+"Individuals - internet use","isoc_ci_ifp_iu","dataset","16.12.2025","16.12.2025","2002","2025",528373,6
+"Individuals - frequency of internet use","isoc_ci_ifp_fu","dataset","16.12.2025","16.12.2025","2003","2025",611250,6
+"Individuals - internet activities","isoc_ci_ac_i","dataset","16.12.2025","16.12.2025","2002","2025",2797600,6
+"Internet purchases by individuals (2020 onwards)","isoc_ec_ib20","dataset","16.12.2025","16.12.2025","2020","2025",524989,6
+"Internet purchases - goods or services (2020 onwards)","isoc_ec_ibgs","dataset","18.12.2025","16.12.2025","2020","2025",2109257,6
+"Internet purchases - collaborative economy (2020 onwards)","isoc_ec_ce_i","dataset","16.12.2025","16.12.2025","2020","2025",273622,6
+"Internet purchases - problems encountered (2021 onwards)","isoc_ec_iprb21","dataset","16.12.2025","16.12.2025","2021","2025",366823,6
+"Financial activities over the internet (2020 onwards)","isoc_ec_ifi20","dataset","16.12.2025","16.12.2025","2020","2025",136086,6
+"E-government activities of individuals via websites","isoc_ciegi_ac","dataset","16.12.2025","16.12.2025","2008","2025",811586,6
+"Reasons for not submitting completed forms to public authorities' websites","isoc_ciegi_rtx","dataset","16.12.2025","16.12.2025","2011","2025",1197129,6
+"Privacy and protection of personal data (2020 onwards)","isoc_cisci_prv20","dataset","16.12.2025","16.12.2025","2020","2025",259038,6
+"Individuals' level of digital skills (from 2021 onwards)","isoc_sk_dskl_i21","dataset","16.12.2025","16.12.2025","2021","2025",572253,6
+"Individuals' level of computer skills (2021 onwards)","isoc_sk_cskl_i21","dataset","16.12.2025","16.12.2025","2021","2025",180199,6
+"Evaluating data, information and digital content (2021 onwards)","isoc_sk_edic_i21","dataset","16.12.2025","16.12.2025","2021","2025",176687,6
+"Population on 1 January by age groups and sex - cities and greater cities","urb_cpop1","dataset","19.12.2025","25.11.2025","1989","2025",566750,4
+"Population structure - cities and greater cities","urb_cpopstr","dataset","19.12.2025","25.11.2025","1989","2025",186250,4
+"Population by citizenship and country of birth - cities and greater cities","urb_cpopcb","dataset","19.12.2025","25.11.2025","1990","2025",122267,4
+"Education - cities and greater cities","urb_ceduc","dataset","19.12.2025","09.12.2025","1990","2025",82895,4
+"Population on 1 January by age groups and sex - functional urban areas","urb_lpop1","dataset","19.12.2025","01.12.2025","1989","2025",420648,4
+"Population structure - functional urban areas","urb_lpopstr","dataset","19.12.2025","01.12.2025","1989","2025",130353,4
+"Population by citizenship and country of birth - functional urban areas","urb_lpopcb","dataset","19.12.2025","25.11.2025","1990","2025",76171,4
+"Education - functional urban areas","urb_leduc","dataset","19.12.2025","09.12.2025","1990","2025",22153,4
+"Euro/ECU exchange rates - annual data","ert_bil_eur_a","dataset","04.01.2026","04.01.2026","1971","2025",8092,6
+"GDP and main aggregates - international data cooperation annual data","naida_10_gdp","dataset","08.10.2025","24.12.2025","1975","2025",296358,5
+"Conversion factors for euro fixed series into euro/ECU - annual data","ert_bil_conv_a","dataset","04.01.2026","21.11.2025","1971","2025",1902,5
+"Former euro area national currencies vs. euro/ECU - annual data","ert_h_eur_a","dataset","04.01.2026","21.11.2025","1971","2025",1740,4
+"HICP - administered prices (composition)","prc_hicp_apc","dataset","17.12.2025","16.04.2025","2001","2025",801309,5
+"HICP - country weights","prc_hicp_cow","dataset","20.08.2025","03.02.2025","1996","2025",3012,5
+"HICP - item weights","prc_hicp_inw","dataset","20.08.2025","03.02.2025","1996","2025",347400,5
+"House price index - Item weights","prc_hpi_inw","dataset","03.10.2025","04.07.2025","2005","2025",1869,5
+"House price index - country weights","prc_hpi_cow","dataset","03.10.2025","04.07.2025","2005","2025",7326,5
+"Owner-occupied housing price index - item weights","prc_hpi_ooinw","dataset","03.10.2025","04.07.2025","2005","2025",6366,5
+"Owner-occupied housing price index - country weights","prc_hpi_oocow","dataset","03.10.2025","04.07.2025","2010","2025",23184,5
+"Correction coefficients outside the European Union (Duty stations) - index (Brussels = 100)","prc_colc_ext","dataset","07.11.2025","07.11.2025","2000","2025",3418,4
+"Population change - Demographic balance and crude rates at national level","demo_gind","dataset","14.10.2025","11.07.2025","1960","2025",64312,4
+"Usually resident population on 1 January","demo_urespop","dataset","08.10.2025","08.10.2025","2014","2025",357,4
+"Population on 1st January by age, sex and type of projection","proj_23np","dataset","28.06.2023","03.01.2024","2022","2100",5005440,4
+"Assumptions for fertility rates by age and type of projection","proj_23naasfr","dataset","24.05.2023","03.01.2024","2022","2100",180120,4
+"Assumptions for mortality rates by age, sex and type of projection","proj_23naasmr","dataset","24.05.2023","03.01.2024","2022","2100",957480,4
+"Projected life expectancy by age (in completed years), sex and type of projection","proj_23nalexp","dataset","24.05.2023","03.01.2024","2022","2100",957480,4
+"Assumptions for net migration by age, sex and type of projection","proj_23nanmig","dataset","24.05.2023","03.01.2024","2022","2100",2175660,4
+"Demographic balances and indicators by type of projection","proj_23ndbi","dataset","24.05.2023","14.04.2025","2022","2100",303360,4
+"Short-term population projections (2023-2050)","proj_stp24","dataset","10.10.2024","10.10.2024","2023","2050",13272,4
+"Short-term population projections (2024-2050)","proj_stp25","dataset","21.05.2025","21.05.2025","2024","2050",12798,4
+"Population on 1st January by age, sex and type of projection","proj_19np","dataset","28.08.2023","03.01.2024","2019","2100",5219136,4
+"Assumptions for fertility rates by age and type of projection","proj_19naasfr","dataset","20.07.2020","03.01.2024","2019","2100",193192,4
+"Assumptions for probability of dying by age, sex and type of projection","proj_19naasmr","dataset","20.07.2020","03.01.2024","2019","2100",1010404,4
+"Assumptions for net migration by age, sex and type of projection","proj_19nanmig","dataset","14.07.2020","03.01.2024","2019","2100",2333556,4
+"Projected life expectancy by age (in completed years), sex and type of projection","proj_19nalexp","dataset","14.01.2021","03.01.2024","2019","2100",810324,4
+"Demographic balances and indicators by type of projection","proj_19ndbi","dataset","28.08.2023","21.12.2023","2019","2100",318488,4
+"Short-term update of the projected population (2022-2032)","proj_stp22","dataset","28.08.2023","08.01.2024","2019","2032",4410,4
+"Population on 1st January by age, sex, type of projection and NUTS 3 region","proj_19rp3","dataset","23.04.2021","10.01.2024","2019","2100",91535616,4
+"Assumptions for fertility rates by age, type of projection and NUTS 3 region","proj_19raasfr3","dataset","16.11.2020","10.01.2024","2019","2100",3789056,4
+"Assumptions for probability of dying by age, sex, type of projection and NUTS 3 region","proj_19raasmr3","dataset","16.11.2020","10.01.2024","2019","2100",20141824,4
+"Assumptions for net migration by age, sex, type of projection and NUTS 3 region","proj_19ranmig3","dataset","06.05.2021","10.01.2024","2019","2100",30511872,4
+"Projected deaths by age, sex, type of projection and NUTS 3 region","proj_19rdth3","dataset","28.04.2021","10.01.2024","2019","2100",30511872,4
+"Projected life expectancy by age (reached during the year), sex, type of projection and NUTS 3 region","proj_19ralexp3","dataset","09.03.2021","10.01.2024","2019","2100",20141824,4
+"Demographic balances and indicators by type of projection and NUTS 3 region","proj_19rdbi3","dataset","19.05.2021","14.04.2025","2019","2100",5783296,4
+"Monthly minimum wage as a proportion of average monthly earnings (%) - NACE Rev. 2 (from 2008 onwards)","earn_mw_avgr2","dataset","10.09.2025","26.02.2025","2008","2025",1132,5
+"Persons at risk of poverty or social exclusion by age and sex","ilc_peps01n","dataset","22.12.2025","22.12.2025","2015","2025",80784,6
+"Persons at risk of poverty or social exclusion by most frequent activity status (population aged 18 and over)","ilc_peps02n","dataset","22.12.2025","22.12.2025","2015","2025",247960,6
+"Persons at risk of poverty or social exclusion by income quantile and household composition","ilc_peps03n","dataset","22.12.2025","22.12.2025","2015","2025",85976,6
+"Persons at risk of poverty or social exclusion by educational attainment level (population aged 18 and over)","ilc_peps04n","dataset","22.12.2025","22.12.2025","2015","2025",138452,6
+"Persons at risk of poverty or social exclusion by group of citizenship (population aged 18 and over)","ilc_peps05n","dataset","22.12.2025","22.12.2025","2015","2025",122558,6
+"Persons at risk of poverty or social exclusion by group of country of birth (population aged 18 and over)","ilc_peps06n","dataset","22.12.2025","22.12.2025","2015","2025",165883,6
+"Persons at risk of poverty or social exclusion by tenure status","ilc_peps07n","dataset","22.12.2025","22.12.2025","2015","2025",3830,6
+"Children at risk of poverty or social exclusion by educational attainment level of their parents (population aged 0 to 17 years)","ilc_peps60n","dataset","22.12.2025","22.12.2025","2015","2025",4609,6
+"Persons by risk of poverty, material deprivation, work intensity of the household, age and sex of the person - intersections of EU 2030 poverty target indicators","ilc_pees01n","dataset","22.12.2025","22.12.2025","2015","2025",201696,6
+"Persons at risk of poverty or social exclusion - EU2030 target","ilc_pecs01","dataset","22.12.2025","22.12.2025","2014","2025",1416,6
+"Income quintile share ratio S80/S20 for disposable income by sex and age group","ilc_di11","dataset","22.12.2025","22.12.2025","2003","2025",7191,6
+"Income quintile share ratio S80/S20 for gross market income by sex and age group","ilc_di11a","dataset","22.12.2025","22.12.2025","2007","2025",5787,6
+"Income quintile share ratio S80/S20 for net market income by sex and age group","ilc_di11b","dataset","22.12.2025","22.12.2025","2007","2025",5805,6
+"Income quintile share ratio S80/S20 for gross total disposable income by sex and age group","ilc_di11c","dataset","22.12.2025","22.12.2025","2007","2025",5805,6
+"Income quintile share ratio S80/S20 by NUTS 2 region","ilc_di11_r","dataset","22.12.2025","22.12.2025","2003","2025",3637,6
+"Income quintile share ratio S80/S50 for disposable income by sex and age group","ilc_di11d","dataset","22.12.2025","22.12.2025","2007","2025",5805,6
+"Income quintile share ratio S50/S20 for disposable income by sex and age group","ilc_di11e","dataset","22.12.2025","22.12.2025","2007","2025",5805,6
+"Income quintile share ratio S40/S100 for disposable income by sex and age group","ilc_di11f","dataset","22.12.2025","22.12.2025","2007","2025",5805,6
+"Effect of taxes on income quintile share ratio S80/S20","ilc_di11g","dataset","22.12.2025","22.12.2025","2010","2025",544,6
+"Effect of social transfers on income quintile share ratio S80/S20","ilc_di11h","dataset","22.12.2025","22.12.2025","2010","2025",544,6
+"Effect of taxes and social transfers on income quintile share ratio S80/S20","ilc_di11i","dataset","22.12.2025","22.12.2025","2010","2025",544,6
+"Gini coefficient of equivalised disposable income by age","ilc_di12","dataset","22.12.2025","22.12.2025","2014","2025",804,6
+"Gini coefficient of equivalised disposable income before social transfers (pensions included in social transfers)","ilc_di12b","dataset","22.12.2025","22.12.2025","2003","2025",795,6
+"Gini coefficient of equivalised disposable income before social transfers (pensions excluded from social transfers)","ilc_di12c","dataset","22.12.2025","22.12.2025","2003","2025",795,6
+"At-risk-of-poverty thresholds","ilc_li01","dataset","22.12.2025","22.12.2025","1995","2025",39747,6
+"At-risk-of-poverty rate by poverty threshold, age and sex","ilc_li02","dataset","22.12.2025","22.12.2025","1995","2025",1069680,6
+"At-risk-of-poverty rate by poverty threshold and household type","ilc_li03","dataset","22.12.2025","22.12.2025","1995","2025",116351,6
+"At-risk-of-poverty rate by poverty threshold and most frequent activity in the previous year","ilc_li04","dataset","22.12.2025","22.12.2025","1995","2025",642129,6
+"At-risk-of-poverty rate by poverty threshold, work intensity of the household and broad age groups","ilc_li06","dataset","22.12.2025","22.12.2025","2010","2025",388759,6
+"At-risk-of-poverty rate by poverty threshold and educational attainment level","ilc_li07","dataset","22.12.2025","22.12.2025","2003","2025",149989,6
+"At-risk-of-poverty rate by poverty threshold and tenure status","ilc_li08","dataset","22.12.2025","22.12.2025","1995","2025",365339,6
+"At-risk-of-poverty rate before social transfers (pensions included in social transfers) by poverty threshold, age and sex","ilc_li09","dataset","22.12.2025","22.12.2025","1995","2025",208210,6
+"At-risk-of-poverty rate before social transfers (pensions included in social transfers) by household type","ilc_li09b","dataset","22.12.2025","22.12.2025","2003","2025",15086,6
+"At-risk-of-poverty rate before social transfers (pensions excluded from social transfers) by poverty threshold, age and sex","ilc_li10","dataset","22.12.2025","22.12.2025","1995","2025",208162,6
+"At-risk-of-poverty rate before social transfers (pensions excluded from social transfers) by household type","ilc_li10b","dataset","22.12.2025","22.12.2025","2003","2025",15082,6
+"Relative at risk of poverty gap by poverty threshold","ilc_li11","dataset","22.12.2025","22.12.2025","1995","2025",189049,6
+"Relative poverty gap by risk of poverty and work intensity of the household","ilc_li12","dataset","22.12.2025","22.12.2025","2014","2025",2334,6
+"Relative poverty gap by risk of poverty and work intensity of the households with income from benefits","ilc_li13","dataset","22.12.2025","22.12.2025","2014","2025",2386,6
+"Persistent at-risk-of-poverty rate by sex and age","ilc_li21","dataset","22.12.2025","22.12.2025","1997","2025",116031,6
+"At-risk-of-poverty rate anchored at a fixed moment in time (2019) by age and sex","ilc_li22","dataset","22.12.2025","22.12.2025","2019","2025",2556,6
+"At-risk-of-poverty rate anchored at a fixed moment in time (2008) by age and sex","ilc_li22b","dataset","22.12.2025","22.12.2025","2008","2025",7428,6
+"Persistent at-risk-of-poverty rate by household type","ilc_li23","dataset","22.12.2025","22.12.2025","2007","2025",3852,6
+"Persistent at-risk-of-poverty rate by educational attainment level","ilc_li24","dataset","22.12.2025","22.12.2025","2007","2025",5777,6
+"At-risk-of-poverty rate by group of citizenship (population aged 18 and over)","ilc_li31","dataset","22.12.2025","22.12.2025","2003","2025",114700,6
+"At-risk-of-poverty rate by group of country of birth (population aged 18 and over)","ilc_li32","dataset","22.12.2025","22.12.2025","2003","2025",173511,6
+"At-risk-of-poverty rate after deducting housing costs by age and sex","ilc_li45","dataset","22.12.2025","22.12.2025","2003","2025",11790,6
+"Distribution of population by number of years spent in poverty within a four-year period","ilc_li51","dataset","22.12.2025","22.12.2025","2007","2025",67469,6
+"At-risk-of poverty rate for children by educational attainment level of their parents (population aged 0 to 17 years)","ilc_li60","dataset","22.12.2025","22.12.2025","2003","2025",9474,6
+"At-risk-of-poverty rate before social transfers (pensions excluded from social transfers) by NUTS 2 region","ilc_li10_r","dataset","22.12.2025","22.12.2025","2003","2025",3804,6
+"Persons receiving benefits (other than old age benefits) by risk of poverty and work intensity of the household (population aged 18-64)","ilc_li70","dataset","22.12.2025","22.12.2025","2014","2025",1556,6
+"Persons receiving benefits by risk of poverty thresholds, work intensity of the household and percentage of the benefits in total disposable income (population aged 18-64)","ilc_li71","dataset","22.12.2025","22.12.2025","2015","2025",2384,6
+"At-risk-of-poverty rate of persons below-above 65 years by sex","ilc_pnp9","dataset","22.12.2025","22.12.2025","2003","2025",4770,6
+"Relative median income ratio (65+)","ilc_pnp2","dataset","22.12.2025","22.12.2025","1995","2025",2673,6
+"Relative median income ratio (60+)","ilc_pns2","dataset","22.12.2025","22.12.2025","2003","2025",2385,6
+"Gender differences in the relative median income ratio (65+)","ilc_pnp10","dataset","22.12.2025","22.12.2025","2003","2025",3180,6
+"Gender differences in the relative median income ratio (60+)","ilc_pns11","dataset","22.12.2025","22.12.2025","2003","2025",11472,6
+"Aggregate replacement ratio for pensions (excluding other social benefits) by sex","ilc_pnp3","dataset","22.12.2025","22.12.2025","2010","2025",1626,6
+"Gender differences in the aggregate replacement ratio for pensions (excluding other social benefits)","ilc_pnp11","dataset","22.12.2025","22.12.2025","2010","2025",545,6
+"Gender differences in the at-risk-of-poverty rate by age","ilc_pnp12","dataset","22.12.2025","22.12.2025","2003","2025",1598,6
+"Gender pension average gap by age group","ilc_pnp13","dataset","22.12.2025","22.12.2025","2015","2025",1086,6
+"Gender pension median gap by age group","ilc_pnp13m","dataset","22.12.2025","22.12.2025","2015","2025",1080,6
+"Gender coverage rate in pension by age group","ilc_pnp14","dataset","22.12.2025","22.12.2025","2003","2025",2322,6
+"In-work at-risk-of-poverty rate by age and sex","ilc_iw01","dataset","22.12.2025","22.12.2025","2003","2025",62426,6
+"In-work at-risk-of-poverty rate by household type","ilc_iw02","dataset","22.12.2025","22.12.2025","2003","2025",4759,6
+"In-work at-risk-of-poverty rate by work intensity of the household (population aged 18 to 64 years)","ilc_iw03","dataset","22.12.2025","22.12.2025","2014","2025",7556,6
+"In-work at-risk-of-poverty rate by educational attainment level","ilc_iw04","dataset","22.12.2025","22.12.2025","2003","2025",2379,6
+"In-work at-risk-of-poverty rate by type of contract","ilc_iw05","dataset","22.12.2025","22.12.2025","2003","2025",4725,6
+"In-work at-risk-of-poverty rate by months worked","ilc_iw06","dataset","22.12.2025","22.12.2025","2003","2025",1587,6
+"In-work at-risk-of-poverty rate by full-/part-time work","ilc_iw07","dataset","22.12.2025","22.12.2025","2003","2025",1586,6
+"In-work at-risk-of-poverty rate by group of citizenship (population aged 18 and over)","ilc_iw15","dataset","22.12.2025","22.12.2025","2003","2025",95175,6
+"In-work at-risk-of-poverty rate by  group of country of birth (population aged 18 and over)","ilc_iw16","dataset","22.12.2025","22.12.2025","2003","2025",113715,6
+"Distribution of income by quantiles","ilc_di01","dataset","22.12.2025","22.12.2025","1995","2025",133532,6
+"Distribution of income by different income groups","ilc_di02","dataset","22.12.2025","22.12.2025","1995","2025",69860,6
+"Mean and median income by age and sex","ilc_di03","dataset","22.12.2025","22.12.2025","1995","2025",317148,6
+"Mean and median income by household type","ilc_di04","dataset","22.12.2025","22.12.2025","1995","2025",74998,6
+"Mean and median income by most frequent activity status","ilc_di05","dataset","22.12.2025","22.12.2025","1995","2025",668364,6
+"Mean and median income by work intensity of the household (population aged 0 to 64 years)","ilc_di07","dataset","22.12.2025","22.12.2025","2014","2025",316230,6
+"Mean and median income by educational attainment level","ilc_di08","dataset","22.12.2025","22.12.2025","2003","2025",118572,6
+"Mean and median income by tenure status","ilc_di09","dataset","22.12.2025","22.12.2025","1995","2025",271974,6
+"Mean and median income by ability to make ends meet","ilc_di10","dataset","22.12.2025","22.12.2025","1995","2025",37266,6
+"Mean and median income before social transfers (pensions included in social transfers) by age and sex","ilc_di13","dataset","22.12.2025","22.12.2025","2003","2025",105456,6
+"Mean and median income before social transfers (pensions included in social transfers) by household type","ilc_di13b","dataset","22.12.2025","22.12.2025","2003","2025",26364,6
+"Mean and median income before social transfers (pensions excluded from social transfers) by age and sex","ilc_di14","dataset","22.12.2025","22.12.2025","2003","2025",105456,6
+"Mean and median income before social transfers (pensions excluded from social transfers) by household type","ilc_di14b","dataset","22.12.2025","22.12.2025","2003","2025",26364,6
+"Mean and median income by group of citizenship (population aged 18 and over)","ilc_di15","dataset","22.12.2025","22.12.2025","2003","2025",617664,6
+"Mean and median income by  group of country of birth (population aged 18 and over)","ilc_di16","dataset","22.12.2025","22.12.2025","2003","2025",741666,6
+"Income in real terms (2010 SILC=100)","ilc_di18","dataset","22.12.2025","22.12.2025","2011","2025",467,6
+"Share of people having income greater or equal to specific national thresholds by age and sex","ilc_di20","dataset","22.12.2025","22.12.2025","2003","2025",132720,6
+"Share of people having income greater or equal to specific national thresholds by educational attainment level","ilc_di27","dataset","22.12.2025","22.12.2025","2003","2025",16590,6
+"Transitions of income within one year by decile","ilc_di30a","dataset","22.12.2025","22.12.2025","2006","2025",34300,6
+"Transitions of income within two years by decile","ilc_di30b","dataset","22.12.2025","22.12.2025","2007","2025",32634,6
+"Transitions of income within three years by decile","ilc_di30c","dataset","22.12.2025","22.12.2025","2007","2025",31603,6
+"Persons living in households with very low work intensity by age and sex (population aged 0 to 64 years)","ilc_lvhl11n","dataset","22.12.2025","22.12.2025","2015","2025",55800,6
+"People living in households with very low work intensity by most frequent activity status (population aged 18 to 64 years)","ilc_lvhl12n","dataset","22.12.2025","22.12.2025","2014","2025",123451,6
+"People living in households with very low work intensity by income quintile and household type (population aged 0 to 64 years)","ilc_lvhl13n","dataset","22.12.2025","22.12.2025","2014","2025",65359,6
+"People living in households with very low work intensity by educational attainment level (population aged 18 to 64 years)","ilc_lvhl14n","dataset","22.12.2025","22.12.2025","2014","2025",87632,6
+"People living in households with very low work intensity by group of citizenship (population aged 18 to 64 years)","ilc_lvhl15n","dataset","22.12.2025","22.12.2025","2014","2025",83376,6
+"People living in households with very low work intensity by group of country of birth (population aged 18 to 64 years)","ilc_lvhl16n","dataset","22.12.2025","22.12.2025","2014","2025",150861,6
+"People living in households with very low work intensity by tenure status (population aged 0 to 64 years)","ilc_lvhl17n","dataset","22.12.2025","22.12.2025","2014","2025",3041,6
+"Labour transitions by employment status","ilc_lvhl30","dataset","22.12.2025","22.12.2025","2006","2025",51271,6
+"Labour transitions by type of contract","ilc_lvhl32","dataset","22.12.2025","22.12.2025","2006","2025",50453,6
+"Labour transitions from temporary to permanent contracts by sex -3-year average","ilc_lvhl36","dataset","22.12.2025","22.12.2025","2008","2025",1697,6
+"Labour transitions by type of contract - changes in employment security","ilc_lvhl33","dataset","22.12.2025","22.12.2025","2006","2025",31070,6
+"Labour transitions by pay level","ilc_lvhl34","dataset","22.12.2025","22.12.2025","2006","2025",131688,6
+"Labour transitions by employment status and pay level - changes in qualifications","ilc_lvhl35","dataset","22.12.2025","22.12.2025","2006","2025",18548,6
+"Children living in households with very low work intensity by educational attainment level of their parents (population aged 0 to 17 years)","ilc_lvhl60n","dataset","22.12.2025","22.12.2025","2014","2025",4345,6
+"Persons living in households with very low work intensity by age and sex (population aged 0 to 59 years) - EU 2020 strategy","ilc_lvhl11","dataset","22.12.2025","22.12.2025","2003","2025",192056,6
+"Persons living in households with very low work intensity by most frequent activity status (population aged 18 to 59 years) - EU 2020 strategy","ilc_lvhl12","dataset","22.12.2025","22.12.2025","2003","2025",129231,6
+"Persons living in households with very low work intensity by income quantile and household composition (population aged 0 to 59 years) - EU 2020 strategy","ilc_lvhl13","dataset","22.12.2025","22.12.2025","2003","2025",69019,6
+"Persons living in households with very low work intensity by educational attainment level (population aged 18 to 59 years) - EU 2020 strategy","ilc_lvhl14","dataset","22.12.2025","22.12.2025","2003","2025",75434,6
+"Persons living in households with very low work intensity by group of citizenship (population aged 18 to 59 years) - EU 2020 strategy","ilc_lvhl15","dataset","22.12.2025","22.12.2025","2003","2025",67271,6
+"Persons living in households with very low work intensity by group of country of birth (population aged 18 to 59 years) - EU 2020 strategy","ilc_lvhl16","dataset","22.12.2025","22.12.2025","2003","2025",111282,6
+"Persons living in households with very low work intensity by tenure status (population aged 0 to 59 years) - EU 2020 strategy","ilc_lvhl17","dataset","22.12.2025","22.12.2025","2003","2025",6907,6
+"Persons living in households with very low work intensity by NUTS 2 region (population aged 0 to 59 years) - EU 2020 strategy","ilc_lvhl21","dataset","22.12.2025","22.12.2025","2003","2025",7275,6
+"Children living in households with very low work intensity by educational attainment level of their parents (population aged 0 to 17 years)  - EU 2020 strategy","ilc_lvhl60","dataset","22.12.2025","22.12.2025","2004","2025",9391,6
+"Overcrowding rate by age, sex and poverty status - total population","ilc_lvho05a","dataset","22.12.2025","22.12.2025","2003","2025",113865,7
+"Overcrowding rate by household type - total population","ilc_lvho05b","dataset","22.12.2025","22.12.2025","2003","2025",14274,7
+"Overcrowding rate by tenure status - total population","ilc_lvho05c","dataset","22.12.2025","22.12.2025","2003","2025",3017,7
+"Overcrowding rate by income quintile - total population","ilc_lvho05q","dataset","22.12.2025","22.12.2025","2003","2025",4764,7
+"Overcrowding rate by age, sex and poverty status - population without single-person households","ilc_lvho06","dataset","22.12.2025","22.12.2025","2003","2025",89419,7
+"Overcrowding rate by income quintile - population without single-person households","ilc_lvho06q","dataset","22.12.2025","22.12.2025","2003","2025",4764,7
+"Overcrowding rate by age, sex and group of citizenship (total population aged 18 and over)","ilc_lvho15","dataset","22.12.2025","22.12.2025","2003","2025",114758,7
+"Overcrowding rate by age, sex and group of country of birth (total population aged 18 and over)","ilc_lvho16","dataset","22.12.2025","22.12.2025","2003","2025",137515,7
+"Share of people living in under-occupied dwellings by age, sex and poverty status - total population","ilc_lvho50a","dataset","22.12.2025","22.12.2025","2003","2025",28531,7
+"Share of people living in under-occupied dwellings by household type and income quintile - total population","ilc_lvho50b","dataset","22.12.2025","22.12.2025","2003","2025",42638,7
+"Share of people living in under-occupied dwellings by tenure status - total population","ilc_lvho50c","dataset","22.12.2025","22.12.2025","2003","2025",2379,7
+"Housing cost overburden rate by age, sex and poverty status","ilc_lvho07a","dataset","22.12.2025","22.12.2025","2003","2025",119228,7
+"Housing cost overburden rate by income quintile","ilc_lvho07b","dataset","22.12.2025","22.12.2025","2003","2025",3900,7
+"Housing cost overburden rate by tenure status","ilc_lvho07c","dataset","22.12.2025","22.12.2025","2003","2025",3737,7
+"Housing cost overburden rate by household type","ilc_lvho07e","dataset","22.12.2025","22.12.2025","2003","2025",14022,7
+"Median of the housing cost burden distribution by age, sex and poverty status","ilc_lvho08a","dataset","22.12.2025","22.12.2025","2003","2025",27920,7
+"Housing cost overburden rate by age, sex and group of citizenship (total population aged 18 and over)","ilc_lvho25","dataset","22.12.2025","22.12.2025","2003","2025",111962,7
+"Housing cost overburden rate by age, sex and group of country of birth (total population aged 18 and over)","ilc_lvho26","dataset","22.12.2025","22.12.2025","2003","2025",135001,7
+"Distribution of population by housing cost burden and sex","ilc_lvho27","dataset","22.12.2025","22.12.2025","2003","2025",11685,7
+"Distribution of population by housing cost burden and tenure status","ilc_lvho28","dataset","22.12.2025","22.12.2025","2003","2025",14905,7
+"Distribution of population by housing cost burden and household type","ilc_lvho30","dataset","22.12.2025","22.12.2025","2003","2025",15520,7
+"Material and social deprivation rate by age, sex and most frequent activity status","ilc_mdsd01","dataset","22.12.2025","22.12.2025","2014","2025",204640,6
+"Material and social deprivation rate by income quintile and household type","ilc_mdsd02","dataset","22.12.2025","22.12.2025","2014","2025",49818,6
+"Material and social deprivation rate by age, sex and educational attainment level","ilc_mdsd03","dataset","22.12.2025","22.12.2025","2014","2025",139316,6
+"Material and social deprivation rate by age, sex and group of citizenship","ilc_mdsd04","dataset","22.12.2025","22.12.2025","2014","2025",126293,6
+"Material and social deprivation rate by age, sex and group of country of birth","ilc_mdsd05","dataset","22.12.2025","22.12.2025","2014","2025",161212,6
+"Material and social deprivation rate by tenure status","ilc_mdsd06","dataset","22.12.2025","22.12.2025","2014","2025",2157,6
+"Material and social deprivation rate by age and sex","ilc_mdsd07","dataset","22.12.2025","22.12.2025","2014","2025",52665,6
+"Material and social deprivation rate by NUTS 2 region","ilc_mdsd08","dataset","22.12.2025","22.12.2025","2014","2025",2263,6
+"Material and social deprivation rate for children by age and educational attainment level of their parents","ilc_mdsd10","dataset","22.12.2025","22.12.2025","2014","2025",11189,6
+"Severe material and social deprivation rate by age and sex","ilc_mdsd11","dataset","22.12.2025","22.12.2025","2015","2025",81798,6
+"Severe material and social deprivation by age, sex and most frequent activity status","ilc_mdsd12","dataset","22.12.2025","22.12.2025","2015","2025",165313,6
+"Severe material and social deprivation by income quantile and household composition","ilc_mdsd13","dataset","22.12.2025","22.12.2025","2019","2025",25465,6
+"Severe material and social deprivation by age, sex and educational attainment level","ilc_mdsd14","dataset","22.12.2025","22.12.2025","2015","2025",112533,6
+"Severe material and social deprivation by age, sex and group of citizenship","ilc_mdsd15","dataset","22.12.2025","22.12.2025","2014","2025",78291,6
+"Severe material and social deprivation by age, sex and group of country of birth","ilc_mdsd16","dataset","22.12.2025","22.12.2025","2014","2025",91633,6
+"Severe material and social deprivation by tenure status","ilc_mdsd17","dataset","22.12.2025","22.12.2025","2015","2025",1741,6
+"Severe material and social deprivation by degree of urbanization","ilc_mdsd19","dataset","22.12.2025","22.12.2025","2015","2025",1352,6
+"Severe material and social deprivation of children by educational attainment level of their parents","ilc_mdsd20","dataset","22.12.2025","22.12.2025","2015","2025",8940,6
+"Material and social deprivation rate by number of items of deprivation","ilc_sip8","dataset","22.12.2025","22.12.2025","2010","2025",316008,6
+"Mean number of deprivation items among the deprived","ilc_sis4","dataset","22.12.2025","22.12.2025","2010","2025",3752,6
+"Short-stay accommodation offered via collaborative economy platforms by months and residence of the guest - experimental statistics","tour_ce_omr","dataset","01.10.2025","02.07.2025","2018","2025",27905,5
+"Economic accounts for agriculture - values at current prices","aact_eaa01","dataset","17.12.2025","17.12.2025","1973","2025",1617334,5
+"Economic accounts for agriculture - values at n-1 prices","aact_eaa02","dataset","17.12.2025","17.12.2025","1973","2025",1517624,5
+"Economic accounts for agriculture - values at constant prices (2015 = 100)","aact_eaa03","dataset","17.12.2025","17.12.2025","1973","2025",1040504,5
+"Economic accounts for agriculture - values at real prices","aact_eaa04","dataset","17.12.2025","17.12.2025","1973","2025",2961054,5
+"Economic accounts for agriculture – indices (volume, price, values)","aact_eaa05","dataset","17.12.2025","17.12.2025","1973","2025",5359571,5
+"Economic accounts for agriculture - agricultural income indicators","aact_eaa06","dataset","17.12.2025","17.12.2025","1973","2025",14969,5
+"Economic accounts for agriculture - values at constant prices (2010 = 100)","aact_eaa07","dataset","17.12.2025","17.12.2025","1973","2025",1036881,5
+"Agricultural labour input statistics - absolute figures (thousand annual work units)","aact_ali01","dataset","17.12.2025","17.12.2025","1973","2025",4582,5
+"Agricultural labour input statistics - indices","aact_ali02","dataset","17.12.2025","17.12.2025","1973","2025",12917,5
+"Price indices of the means of agricultural production, input (2020 = 100) - annual data","apri_pi20_ina","dataset","22.12.2025","18.12.2025","2020","2025",25370,6
+"Price indices of agricultural products, output (2020 = 100) - annual data","apri_pi20_outa","dataset","22.12.2025","18.12.2025","2020","2025",39693,6
+"Crop production in EU standard humidity","apro_cpsh1","dataset","15.12.2025","26.08.2025","2000","2025",376825,7
+"Crop production in national humidity","apro_cpnh1","dataset","15.12.2025","06.11.2025","2000","2025",360203,7
+"Bovine population - annual data","apro_mt_lscatl","dataset","29.10.2025","03.09.2025","1959","2025",45487,7
+"Pig population - annual data","apro_mt_lspig","dataset","29.10.2025","03.09.2025","1969","2025",33803,7
+"Area of wooded land (FAO)","for_area","dataset","24.10.2025","24.10.2025","1990","2025",456,4
+"Volume of timber (FAO)","for_vol","dataset","26.11.2025","07.11.2025","1990","2025",368,4
+"GBARD by socioeconomic objectives (NABS 2007)","gba_nabsfin07","dataset","28.07.2025","28.07.2025","2004","2026",126117,5
+"GBARD by type of funding","gba_fundmod","dataset","29.07.2025","29.07.2025","2007","2026",8116,5
+"National public funding to transnationally coordinated R&D","gba_tncoor","dataset","28.07.2025","28.07.2025","2007","2026",13652,5
+"Individuals - difficulties encountered when using the internet","isoc_iiu_iuprb","dataset","16.12.2025","16.12.2025","2025","2025",33362,5
+"Individuals - reasons for not using the internet","isoc_iiu_iuxr","dataset","16.12.2025","16.12.2025","2025","2025",17038,5
+"Individuals - encountering hostile or degrading online messages","isoc_ci_hm","dataset","16.12.2025","16.12.2025","2023","2025",115441,5
+"Use of electronic identification (eID)","isoc_eid_ieid","dataset","16.12.2025","16.12.2025","2023","2025",145655,5
+"Management of accounts of a free app or service","isoc_cisci_acfas","dataset","16.12.2025","16.12.2025","2024","2025",49906,5
+"Individuals - use of generative AI tools","isoc_ai_iaiu","dataset","18.12.2025","16.12.2025","2025","2025",33979,5
+"Individuals - reasons for not using generative AI tools","isoc_ai_iaiuxr","dataset","16.12.2025","16.12.2025","2025","2025",48225,5
+"Internet access by NACE Rev. 2 activity","isoc_ci_in_en2","dataset","11.12.2025","11.12.2025","2009","2025",158801,5
+"Internet access by size class of enterprise","isoc_ci_in_es","dataset","11.12.2025","11.12.2025","2010","2025",23862,5
+"Use of computers and the internet by employees by NACE Rev. 2 activity","isoc_ci_cm_pn2","dataset","11.12.2025","11.12.2025","2009","2025",56891,5
+"Use of computers and the internet by employees by size class of enterprise","isoc_ci_cm_ps","dataset","11.12.2025","11.12.2025","2010","2025",8259,5
+"Type of connections to the internet by NACE Rev. 2 activity","isoc_ci_it_en2","dataset","11.12.2025","11.12.2025","2010","2025",306904,5
+"Type of connections to the internet by size class of enterprise","isoc_ci_it_es","dataset","11.12.2025","11.12.2025","2010","2025",41751,5
+"E-commerce sales of enterprises by NACE Rev. 2 activity","isoc_ec_eseln2","dataset","11.12.2025","11.12.2025","2009","2025",733740,5
+"E-commerce sales of enterprises by size class of enterprise","isoc_ec_esels","dataset","11.12.2025","11.12.2025","2010","2025",104106,5
+"Value of e-commerce sales by NACE Rev. 2 activity","isoc_ec_evaln2","dataset","11.12.2025","11.12.2025","2009","2025",347138,5
+"Value of e-commerce sales by size class of enterprise","isoc_ec_evals","dataset","11.12.2025","11.12.2025","2010","2025",49643,5
+"Obstacles for web sales by NACE Rev. 2 activity","isoc_ec_wsobsn2","dataset","11.12.2025","11.12.2025","2017","2025",139379,5
+"Obstacles for web sales by size class of enterprise","isoc_ec_wsobs","dataset","11.12.2025","11.12.2025","2017","2025",19163,5
+"Monetary value of e-commerce sales by NACE Rev. 2 activity","isoc_ec_evaln2m","dataset","11.12.2025","11.12.2025","2017","2025",55417,5
+"Monetary value of e-commerce sales by size class of enterprise","isoc_ec_evalsm","dataset","11.12.2025","11.12.2025","2017","2025",7864,5
+"Websites and functionalities by NACE Rev. 2 activity","isoc_ciwebn2","dataset","11.12.2025","11.12.2025","2009","2025",504047,5
+"Websites and functionalities by size class of enterprise","isoc_ciweb","dataset","11.12.2025","11.12.2025","2010","2025",74960,5
+"Social media use by type, internet advertising and NACE Rev. 2 activity","isoc_cismtn2","dataset","11.12.2025","11.12.2025","2014","2025",274867,5
+"Social media use by type, internet advertising and size class of enterprise","isoc_cismt","dataset","11.12.2025","11.12.2025","2014","2025",41491,5
+"Integration of internal processes by NACE Rev. 2 activity","isoc_eb_iipn2","dataset","11.12.2025","11.12.2025","2009","2025",165630,5
+"Integration of internal processes by size class of enterprise","isoc_eb_iip","dataset","11.12.2025","11.12.2025","2010","2025",23747,5
+"Cloud computing services by NACE Rev. 2 activity","isoc_cicce_usen2","dataset","11.12.2025","11.12.2025","2014","2025",596022,5
+"Cloud computing services by size class of enterprise","isoc_cicce_use","dataset","11.12.2025","11.12.2025","2014","2025",85863,5
+"Artificial intelligence by NACE Rev. 2 activity","isoc_eb_ain2","dataset","11.12.2025","11.12.2025","2021","2025",579041,5
+"Artificial intelligence by size class of enterprise","isoc_eb_ai","dataset","11.12.2025","11.12.2025","2021","2025",70341,5
+"Data analytics by NACE Rev. 2 activity","isoc_eb_dan2","dataset","11.12.2025","11.12.2025","2023","2025",154512,5
+"Data analytics by size class of enterprise","isoc_eb_das","dataset","11.12.2025","11.12.2025","2023","2025",18906,5
+"Digital Intensity by NACE Rev. 2 activity","isoc_e_diin2","dataset","11.12.2025","11.12.2025","2015","2025",66401,4
+"Digital Intensity by size class of enterprise","isoc_e_dii","dataset","11.12.2025","11.12.2025","2015","2025",9494,4
+"ICT and environment by NACE Rev. 2 activity","isoc_e_envn2","dataset","11.12.2025","11.12.2025","2022","2025",19856,4
+"ICT and environment by size class of enterprise","isoc_e_envs","dataset","11.12.2025","11.12.2025","2022","2025",2489,4
