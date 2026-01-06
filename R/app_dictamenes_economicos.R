@@ -797,26 +797,17 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     return(omc_indicadores)
   }
   
-  # Mapeo ISO2 a ISO3
-  mapeo_iso2_iso3 <- c(
-    "ES" = "ESP", "DE" = "DEU", "FR" = "FRA", "IT" = "ITA", "GB" = "GBR",
-    "US" = "USA", "JP" = "JPN", "CN" = "CHN", "BR" = "BRA", "MX" = "MEX",
-    "AR" = "ARG", "CL" = "CHL", "CO" = "COL", "PE" = "PER", "VE" = "VEN",
-    "EC" = "ECU", "BO" = "BOL", "PY" = "PRY", "UY" = "URY", "CR" = "CRI",
-    "PA" = "PAN", "GT" = "GTM", "HN" = "HND", "NI" = "NIC", "SV" = "SLV",
-    "DO" = "DOM", "CU" = "CUB", "PR" = "PRI", "PT" = "PRT", "GR" = "GRC",
-    "NL" = "NLD", "BE" = "BEL", "AT" = "AUT", "CH" = "CHE", "SE" = "SWE",
-    "NO" = "NOR", "DK" = "DNK", "FI" = "FIN", "IE" = "IRL", "PL" = "POL",
-    "CZ" = "CZE", "HU" = "HUN", "RO" = "ROU", "BG" = "BGR", "HR" = "HRV",
-    "SK" = "SVK", "SI" = "SVN", "EE" = "EST", "LV" = "LVA", "LT" = "LTU",
-    "RU" = "RUS", "UA" = "UKR", "BY" = "BLR", "KZ" = "KAZ", "UZ" = "UZB",
-    "IN" = "IND", "ID" = "IDN", "TH" = "THA", "VN" = "VNM", "MY" = "MYS",
-    "PH" = "PHL", "SG" = "SGP", "KR" = "KOR", "TW" = "TWN", "HK" = "HKG",
-    "AU" = "AUS", "NZ" = "NZL", "ZA" = "ZAF", "EG" = "EGY", "NG" = "NGA",
-    "KE" = "KEN", "MA" = "MAR", "DZ" = "DZA", "TN" = "TUN", "SA" = "SAU",
-    "AE" = "ARE", "IL" = "ISR", "TR" = "TUR", "IR" = "IRN", "IQ" = "IRQ",
-    "PK" = "PAK", "BD" = "BGD", "LK" = "LKA", "MM" = "MMR", "KH" = "KHM"
-  )
+  # Función helper para convertir ISO2 a ISO3 usando countrycode
+  iso2_a_iso3 <- function(iso2) {
+    if (is.null(iso2) || is.na(iso2) || iso2 == "") return(NULL)
+    tryCatch({
+      iso3 <- countrycode::countrycode(iso2, origin = "iso2c", destination = "iso3c")
+      if (is.na(iso3)) return(NULL)
+      return(iso3)
+    }, error = function(e) {
+      return(NULL)
+    })
+  }
   
   # Lista de países de la Unión Europea (códigos ISO2)
   paises_ue <- c(
@@ -1021,6 +1012,13 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       mapeo_df$decimales <- 1L
     }
     
+    # Añadir nivel si existe en el Excel
+    if ("Nivel" %in% names(bm_indicadores)) {
+      mapeo_df$nivel <- bm_indicadores$Nivel
+    } else {
+      mapeo_df$nivel <- 1L
+    }
+    
     codigos_indicadores <- mapeo_df$indicador_codigo
     n_indicadores <- length(codigos_indicadores)
     message(paste0("Descargando ", n_indicadores, " indicadores del Banco Mundial..."))
@@ -1185,8 +1183,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     match_idx <- which(paises$iso2c == pais_codigo_iso2)
     
     if (length(match_idx) == 0) {
-      pais_codigo_iso3 <- mapeo_iso2_iso3[pais_codigo_iso2]
-      if (is.na(pais_codigo_iso3)) {
+      pais_codigo_iso3 <- iso2_a_iso3(pais_codigo_iso2)
+      if (is.null(pais_codigo_iso3)) {
         return(NULL)
       }
     } else {
@@ -1228,6 +1226,14 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           }
           if (is.na(decimales_valor)) decimales_valor <- 1L
           
+          # Obtener nivel si existe
+          nivel_valor <- if ("Nivel" %in% names(indicadores_df)) {
+            indicadores_df$Nivel[i]
+          } else {
+            1L
+          }
+          if (is.na(nivel_valor)) nivel_valor <- 1L
+          
           mapeo[[codigo]] <- list(
             nombre = ifelse(is.na(indicadores_df$Nombre_ES[i]), codigo, indicadores_df$Nombre_ES[i]),
             unidad = ifelse(is.na(indicadores_df$Unidad[i]), "", indicadores_df$Unidad[i]),
@@ -1235,7 +1241,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
             subcategoria = ifelse(is.na(indicadores_df$Subcategoria[i]), "", indicadores_df$Subcategoria[i]),
             orden = indicadores_df$orden_excel[i],
             escala = escala_valor,
-            decimales = decimales_valor
+            decimales = decimales_valor,
+            nivel = nivel_valor
           )
         }
       }
@@ -1290,7 +1297,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           subcategoria = mapeo[[indicador_codigo]]$subcategoria,
           orden_excel = mapeo[[indicador_codigo]]$orden,
           escala = mapeo[[indicador_codigo]]$escala,
-          decimales = mapeo[[indicador_codigo]]$decimales
+          decimales = mapeo[[indicador_codigo]]$decimales,
+          nivel = mapeo[[indicador_codigo]]$nivel
         ) |>
         dplyr::ungroup() |>
         dplyr::mutate(
@@ -1306,7 +1314,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       resultado <- resultado |>
         dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
                       unidad_corta, unidad_larga, valor, fuente, prioridad_fuente,
-                      seccion, subcategoria, orden_excel, decimales)
+                      seccion, subcategoria, orden_excel, decimales, nivel)
       
       return(resultado)
     }
@@ -1549,6 +1557,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         seccion <- bis_indicadores$Seccion[i]
         subcategoria <- bis_indicadores$Subcategoria[i]
         orden <- bis_indicadores$orden_excel[i]
+        decimales <- if ("Decimales" %in% names(bis_indicadores)) bis_indicadores$Decimales[i] else 1L
+        nivel <- if ("Nivel" %in% names(bis_indicadores)) bis_indicadores$Nivel[i] else 1L
         
         # Determinar tipo (R=Real, N=Nominal)
         tipo_letra <- if (grepl("REER|real", codigo, ignore.case = TRUE)) "R" else "N"
@@ -1579,7 +1589,9 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
               prioridad_fuente = 5L,
               seccion = ifelse(is.na(seccion), "Sector exterior", seccion),
               subcategoria = ifelse(is.na(subcategoria), "", subcategoria),
-              orden_excel = orden
+              orden_excel = orden,
+              decimales = decimales,
+              nivel = nivel
             )
           
           if (nrow(datos_ind) > 0) {
@@ -1653,6 +1665,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         subcategoria <- eurostat_indicadores$Subcategoria[i]
         orden <- eurostat_indicadores$orden_excel[i]
         decimales <- if ("Decimales" %in% names(eurostat_indicadores)) eurostat_indicadores$Decimales[i] else 1L
+        nivel <- if ("Nivel" %in% names(eurostat_indicadores)) eurostat_indicadores$Nivel[i] else 1L
         
         tryCatch({
           datos <- eurostat::get_eurostat(
@@ -1687,12 +1700,13 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
                   seccion = seccion,
                   subcategoria = subcategoria,
                   orden_excel = orden,
-                  decimales = decimales
+                  decimales = decimales,
+                  nivel = nivel
                 ) |>
                 dplyr::filter(!is.na(valor)) |>
                 dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
                               unidad_corta, unidad_larga, valor, fuente, prioridad_fuente,
-                              seccion, subcategoria, orden_excel, decimales)
+                              seccion, subcategoria, orden_excel, decimales, nivel)
               
               if (nrow(datos_procesados) > 0) {
                 datos_lista[[codigo]] <- datos_procesados
@@ -1733,8 +1747,8 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       match_idx <- which(paises$iso2c == pais_codigo_iso2)
       
       if (length(match_idx) == 0) {
-        pais_codigo_iso3 <- mapeo_iso2_iso3[pais_codigo_iso2]
-        if (is.na(pais_codigo_iso3)) {
+        pais_codigo_iso3 <- iso2_a_iso3(pais_codigo_iso2)
+        if (is.null(pais_codigo_iso3)) {
           return(NULL)
         }
       } else {
@@ -1779,6 +1793,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         subcategoria <- omc_indicadores$Subcategoria[i]
         orden <- omc_indicadores$orden_excel[i]
         decimales <- if ("Decimales" %in% names(omc_indicadores)) omc_indicadores$Decimales[i] else 1L
+        nivel <- if ("Nivel" %in% names(omc_indicadores)) omc_indicadores$Nivel[i] else 1L
         
         tryCatch({
           datos <- wtor::get_timeseries_data(
@@ -1804,12 +1819,13 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
                 seccion = seccion,
                 subcategoria = subcategoria,
                 orden_excel = orden,
-                decimales = decimales
+                decimales = decimales,
+                nivel = nivel
               ) |>
               dplyr::filter(!is.na(valor)) |>
               dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
                             unidad_corta, unidad_larga, valor, fuente, prioridad_fuente,
-                            seccion, subcategoria, orden_excel, decimales)
+                            seccion, subcategoria, orden_excel, decimales, nivel)
             
             if (nrow(datos_procesados) > 0) {
               datos_lista[[codigo]] <- datos_procesados
@@ -1827,6 +1843,277 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       
     }, error = function(e) {
       message("Error descargando datos de OMC: ", e$message)
+      return(NULL)
+    })
+  }
+  
+  # ============================================================================
+  # DBnomics - Fuente de respaldo para indicadores faltantes
+  # ============================================================================
+  
+  # Función auxiliar para buscar un indicador específico en DBnomics
+  buscar_indicador_dbnomics <- function(codigo, base_datos, fuente, pais_iso3, pais_iso2, 
+                                        anio_inicio, anio_fin) {
+    if (!requireNamespace("rdbnomics", quietly = TRUE)) {
+      return(NULL)
+    }
+    
+    datos <- NULL
+    
+    tryCatch({
+      if (fuente == "FMI") {
+        # Para IMF WEO: usar query con nombre del indicador
+        if (base_datos == "WEO") {
+          # Formato: IMF/WEO:latest con dimensiones
+          datos <- suppressMessages(suppressWarnings(
+            rdbnomics::rdb(
+              provider_code = "IMF",
+              dataset_code = "WEO:latest",
+              dimensions = list(
+                `weo-country` = pais_iso3,
+                `weo-subject` = codigo
+              )
+            )
+          ))
+        } else if (base_datos == "BOP") {
+          # Para BOP usar mask: A.ES.indicador
+          mask_bop <- paste0("A.", pais_iso3, ".", codigo)
+          datos <- suppressMessages(suppressWarnings(
+            rdbnomics::rdb(
+              provider_code = "IMF",
+              dataset_code = "BOP",
+              mask = mask_bop
+            )
+          ))
+        } else if (base_datos == "CPI") {
+          # Para CPI: mask con frecuencia anual
+          mask_cpi <- paste0("A.", pais_iso3, ".", codigo)
+          datos <- suppressMessages(suppressWarnings(
+            rdbnomics::rdb(
+              provider_code = "IMF",
+              dataset_code = "CPI",
+              mask = mask_cpi
+            )
+          ))
+        } else if (base_datos == "FSI") {
+          # Para FSI (Financial Soundness Indicators)
+          mask_fsi <- paste0("A.", pais_iso3, ".", codigo)
+          datos <- suppressMessages(suppressWarnings(
+            rdbnomics::rdb(
+              provider_code = "IMF",
+              dataset_code = "FSI",
+              mask = mask_fsi
+            )
+          ))
+        } else if (base_datos == "FM") {
+          # Para Government Finance Statistics (GFS)
+          datos <- suppressMessages(suppressWarnings(
+            rdbnomics::rdb(
+              provider_code = "IMF",
+              dataset_code = "GFS",
+              dimensions = list(
+                ref_area = pais_iso3
+              ),
+              query = codigo
+            )
+          ))
+        }
+        
+      } else if (fuente == "BM") {
+        # Para World Bank WDI: usar dimensions con country e indicator
+        datos <- suppressMessages(suppressWarnings(
+          rdbnomics::rdb(
+            provider_code = "WB",
+            dataset_code = "WDI",
+            dimensions = list(
+              country = pais_iso3,
+              indicator = codigo
+            )
+          )
+        ))
+        
+      } else if (fuente == "Eurostat") {
+        # Para Eurostat: usar dimensions con geo
+        datos <- suppressMessages(suppressWarnings(
+          rdbnomics::rdb(
+            provider_code = "Eurostat",
+            dataset_code = base_datos,
+            dimensions = list(geo = pais_iso2)
+          )
+        ))
+        
+      } else if (fuente == "BIS") {
+        # Para BIS EER (Exchange Rates)
+        tipo_eer <- if (grepl("REER|real", codigo, ignore.case = TRUE)) "R" else "N"
+        datos <- suppressMessages(suppressWarnings(
+          rdbnomics::rdb(
+            provider_code = "BIS",
+            dataset_code = "WS_EER",
+            dimensions = list(
+              ref_area = pais_iso2,
+              eer_type = tipo_eer
+            )
+          )
+        ))
+      }
+      
+      # Filtrar por años si hay datos
+      if (!is.null(datos) && nrow(datos) > 0 && "value" %in% names(datos)) {
+        datos <- datos |>
+          dplyr::mutate(
+            year = as.integer(lubridate::year(period))
+          ) |>
+          dplyr::filter(
+            year >= anio_inicio & year <= anio_fin,
+            !is.na(value)
+          )
+        
+        if (nrow(datos) == 0) return(NULL)
+        return(datos)
+      }
+      
+    }, error = function(e) {
+      # Silenciar errores
+    })
+    
+    return(NULL)
+  }
+  
+  # Función principal de DBnomics
+  descargar_datos_dbnomics <- function(pais_codigo_iso2, fecha_inicio, fecha_fin,
+                                       indicadores_faltantes = NULL,
+                                       fuentes_seleccionadas = c("fmi", "bm", "eurostat", "bis")) {
+    tryCatch({
+      if (!requireNamespace("rdbnomics", quietly = TRUE)) {
+        message("   ℹ Paquete rdbnomics no disponible")
+        return(NULL)
+      }
+      
+      # Obtener código ISO3
+      pais_iso3 <- iso2_a_iso3(pais_codigo_iso2)
+      if (is.null(pais_iso3)) {
+        message("   ℹ No se pudo obtener código ISO3 para DBnomics")
+        return(NULL)
+      }
+      
+      anio_inicio <- lubridate::year(fecha_inicio)
+      anio_fin <- lubridate::year(fecha_fin)
+      
+      # Cargar indicadores del Excel
+      indicadores_excel <- cargar_indicadores_excel()
+      if (is.null(indicadores_excel) || nrow(indicadores_excel) == 0) {
+        return(NULL)
+      }
+      
+      # Filtrar por indicadores faltantes si se especifican
+      if (!is.null(indicadores_faltantes) && length(indicadores_faltantes) > 0) {
+        indicadores_a_buscar <- indicadores_excel |>
+          dplyr::filter(Codigo %in% indicadores_faltantes)
+      } else {
+        return(NULL)  # Sin indicadores faltantes, no hacer nada
+      }
+      
+      if (nrow(indicadores_a_buscar) == 0) {
+        return(NULL)
+      }
+      
+      # Mapear fuentes seleccionadas
+      fuentes_activas <- c()
+      if ("fmi" %in% fuentes_seleccionadas) fuentes_activas <- c(fuentes_activas, "FMI")
+      if ("bm" %in% fuentes_seleccionadas) fuentes_activas <- c(fuentes_activas, "BM")
+      if ("eurostat" %in% fuentes_seleccionadas) fuentes_activas <- c(fuentes_activas, "Eurostat")
+      if ("bis" %in% fuentes_seleccionadas) fuentes_activas <- c(fuentes_activas, "BIS")
+      
+      indicadores_filtrados <- indicadores_a_buscar |>
+        dplyr::filter(Fuente %in% fuentes_activas)
+      
+      if (nrow(indicadores_filtrados) == 0) {
+        return(NULL)
+      }
+      
+      message("   Buscando ", nrow(indicadores_filtrados), " indicadores en DBnomics...")
+      
+      datos_lista <- list()
+      n_intentos <- 0
+      n_exitos <- 0
+      
+      for (i in seq_len(nrow(indicadores_filtrados))) {
+        indicador <- indicadores_filtrados[i, ]
+        codigo <- indicador$Codigo
+        fuente <- indicador$Fuente
+        base_datos <- indicador$Base_datos
+        
+        n_intentos <- n_intentos + 1
+        
+        # Buscar el indicador en DBnomics
+        datos <- buscar_indicador_dbnomics(
+          codigo = codigo,
+          base_datos = base_datos,
+          fuente = fuente,
+          pais_iso3 = pais_iso3,
+          pais_iso2 = pais_codigo_iso2,
+          anio_inicio = anio_inicio,
+          anio_fin = anio_fin
+        )
+        
+        if (!is.null(datos) && nrow(datos) > 0) {
+          # Procesar datos encontrados
+          # IMPORTANTE: Marcar como fuente original, NO como DBnomics
+          datos_final <- datos |>
+            dplyr::group_by(year = as.integer(lubridate::year(period))) |>
+            dplyr::summarise(valor = mean(value, na.rm = TRUE), .groups = "drop") |>
+            dplyr::filter(!is.na(valor)) |>
+            dplyr::mutate(
+              country = pais_iso3,
+              iso2c = pais_codigo_iso2,
+              indicador_codigo = codigo,
+              indicador_nombre = indicador$Nombre_ES,
+              unidad_corta = if (!is.na(indicador$Unidad)) indicador$Unidad else "",
+              unidad_larga = if (!is.na(indicador$Unidad)) indicador$Unidad else "",
+              fuente = fuente,  # Usar fuente original (FMI, BM, etc.)
+              prioridad_fuente = dplyr::case_when(
+                fuente == "FMI" ~ 1L,
+                fuente == "Eurostat" ~ 2L,
+                fuente == "BM" ~ 3L,
+                fuente == "OMC" ~ 4L,
+                fuente == "BIS" ~ 5L,
+                TRUE ~ 6L
+              ),
+              seccion = if (!is.na(indicador$Seccion)) indicador$Seccion else "",
+              subcategoria = if (!is.na(indicador$Subcategoria)) indicador$Subcategoria else "",
+              orden_excel = indicador$orden_excel,
+              decimales = if ("Decimales" %in% names(indicador) && !is.na(indicador$Decimales)) indicador$Decimales else 1L,
+              nivel = if ("Nivel" %in% names(indicador) && !is.na(indicador$Nivel)) indicador$Nivel else 1L
+            ) |>
+            dplyr::select(country, year, iso2c, indicador_codigo, indicador_nombre,
+                          unidad_corta, unidad_larga, valor, fuente, prioridad_fuente,
+                          seccion, subcategoria, orden_excel, decimales, nivel)
+          
+          if (nrow(datos_final) > 0) {
+            datos_lista[[codigo]] <- datos_final
+            n_exitos <- n_exitos + 1
+          }
+        }
+        
+        # Mostrar progreso cada 10 indicadores
+        if (n_intentos %% 10 == 0) {
+          message("   Progreso DBnomics: ", n_intentos, "/", nrow(indicadores_filtrados), 
+                  " (", n_exitos, " encontrados)")
+        }
+      }
+      
+      if (length(datos_lista) == 0) {
+        message("   ℹ No se encontraron datos adicionales en DBnomics")
+        return(NULL)
+      }
+      
+      resultado <- dplyr::bind_rows(datos_lista)
+      message("   ✓ DBnomics: ", n_exitos, " indicadores, ", nrow(resultado), " registros")
+      
+      return(resultado)
+      
+    }, error = function(e) {
+      message("   ⚠ Error en DBnomics: ", e$message)
       return(NULL)
     })
   }
@@ -2167,6 +2454,65 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       progreso_actual <- progreso_actual + incremento
     }
     
+    # -------------------------------------------------------------------------
+    # Intentar obtener indicadores faltantes de DBnomics (fuente de respaldo)
+    # -------------------------------------------------------------------------
+    if (length(datos_lista) > 0) {
+      # Identificar indicadores ya descargados
+      indicadores_descargados <- unique(unlist(lapply(datos_lista, function(df) {
+        if (!is.null(df) && "indicador_codigo" %in% names(df)) {
+          unique(df$indicador_codigo)
+        } else {
+          character(0)
+        }
+      })))
+      
+      # Obtener todos los indicadores del Excel para las fuentes seleccionadas
+      indicadores_excel <- cargar_indicadores_excel()
+      if (!is.null(indicadores_excel)) {
+        fuentes_activas <- c()
+        if (usar_fmi) fuentes_activas <- c(fuentes_activas, "FMI")
+        if (usar_bm) fuentes_activas <- c(fuentes_activas, "BM")
+        if (usar_eurostat) fuentes_activas <- c(fuentes_activas, "Eurostat")
+        if (usar_bis) fuentes_activas <- c(fuentes_activas, "BIS")
+        
+        indicadores_esperados <- indicadores_excel |>
+          dplyr::filter(Fuente %in% fuentes_activas) |>
+          dplyr::pull(Codigo)
+        
+        # Indicadores faltantes
+        indicadores_faltantes <- setdiff(indicadores_esperados, indicadores_descargados)
+        
+        if (length(indicadores_faltantes) > 0) {
+          progreso(progreso_actual, paste0("DBnomics (respaldo): ", length(indicadores_faltantes), " indicadores faltantes..."))
+          message(paste0("Intentando ", length(indicadores_faltantes), " indicadores faltantes desde DBnomics..."))
+          
+          fuentes_sel <- c()
+          if (usar_fmi) fuentes_sel <- c(fuentes_sel, "fmi")
+          if (usar_bm) fuentes_sel <- c(fuentes_sel, "bm")
+          if (usar_eurostat) fuentes_sel <- c(fuentes_sel, "eurostat")
+          if (usar_bis) fuentes_sel <- c(fuentes_sel, "bis")
+          
+          datos_dbnomics <- tryCatch({
+            descargar_datos_dbnomics(
+              pais_codigo, fecha_inicio, fecha_fin,
+              indicadores_faltantes = indicadores_faltantes,
+              fuentes_seleccionadas = fuentes_sel
+            )
+          }, error = function(e) {
+            message("   ⚠ Error en DBnomics: ", e$message)
+            NULL
+          })
+          
+          if (!is.null(datos_dbnomics) && nrow(datos_dbnomics) > 0) {
+            datos_lista$dbnomics <- datos_dbnomics
+            resumen_fuentes$DBnomics <- nrow(datos_dbnomics)
+            message(paste0("✓ DBnomics: ", nrow(datos_dbnomics), " registros adicionales"))
+          }
+        }
+      }
+    }
+    
     if (length(datos_lista) == 0) {
       return(list(datos = NULL, resumen = resumen_fuentes))
     }
@@ -2257,6 +2603,73 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     # Aplicar deduplicación por prioridad de fuente
     progreso(0.85, "Eliminando duplicados...")
     datos_deduplicados <- deduplicar_por_prioridad(datos_combinados)
+    
+    # -------------------------------------------------------------------------
+    # Añadir indicadores faltantes con valores NA (para que aparezcan en blanco)
+    # -------------------------------------------------------------------------
+    progreso(0.87, "Añadiendo indicadores sin datos...")
+    
+    # Obtener indicadores ya descargados
+    indicadores_descargados <- unique(datos_deduplicados$indicador_codigo)
+    
+    # Obtener todos los indicadores del Excel según las fuentes seleccionadas
+    indicadores_excel <- cargar_indicadores_excel()
+    if (!is.null(indicadores_excel)) {
+      fuentes_activas <- c()
+      if (usar_fmi) fuentes_activas <- c(fuentes_activas, "FMI")
+      if (usar_bm) fuentes_activas <- c(fuentes_activas, "BM")
+      if (usar_eurostat) fuentes_activas <- c(fuentes_activas, "Eurostat")
+      if (usar_omc) fuentes_activas <- c(fuentes_activas, "OMC")
+      if (usar_bis) fuentes_activas <- c(fuentes_activas, "BIS")
+      
+      indicadores_excel_filtrados <- indicadores_excel |>
+        dplyr::filter(Fuente %in% fuentes_activas)
+      
+      # Indicadores que faltan
+      indicadores_sin_datos <- indicadores_excel_filtrados |>
+        dplyr::filter(!Codigo %in% indicadores_descargados)
+      
+      if (nrow(indicadores_sin_datos) > 0) {
+        message(paste0("   ℹ ", nrow(indicadores_sin_datos), " indicadores sin datos (se mostrarán en blanco)"))
+        
+        # Obtener rango de años
+        anio_inicio_data <- lubridate::year(fecha_inicio)
+        anio_fin_data <- lubridate::year(fecha_fin)
+        todos_anios <- seq(anio_inicio_data, anio_fin_data)
+        
+        # Crear filas vacías para cada indicador faltante y cada año
+        filas_vacias <- purrr::map_dfr(seq_len(nrow(indicadores_sin_datos)), function(i) {
+          ind <- indicadores_sin_datos[i, ]
+          
+          tibble::tibble(
+            country = pais_codigo,
+            year = todos_anios,
+            iso2c = pais_codigo,
+            indicador_codigo = ind$Codigo,
+            indicador_nombre = ind$Nombre_ES,
+            unidad_corta = if (!is.na(ind$Unidad)) ind$Unidad else "",
+            unidad_larga = if (!is.na(ind$Unidad)) ind$Unidad else "",
+            valor = NA_real_,
+            valor_original = NA_real_,
+            fuente = ind$Fuente,
+            prioridad_fuente = 99L,
+            seccion = if (!is.na(ind$Seccion)) ind$Seccion else "",
+            subcategoria = if (!is.na(ind$Subcategoria)) ind$Subcategoria else "",
+            orden_excel = ind$orden_excel,
+            decimales = if ("Decimales" %in% names(ind) && !is.na(ind$Decimales)) ind$Decimales else 1L,
+            nivel = if ("Nivel" %in% names(ind) && !is.na(ind$Nivel)) ind$Nivel else 1L
+          )
+        })
+        
+        # Añadir columnas que puedan faltar
+        if (!"nombre_ingles" %in% names(filas_vacias)) {
+          filas_vacias$nombre_ingles <- NA_character_
+        }
+        
+        # Combinar con datos existentes
+        datos_deduplicados <- dplyr::bind_rows(datos_deduplicados, filas_vacias)
+      }
+    }
     
     # Normalizar valores (ajustar unidades) - pero mantener valor_original
     progreso(0.90, "Normalizando valores...")
@@ -2504,15 +2917,29 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     procesar_categoria <- function(datos_filtrados) {
       if (nrow(datos_filtrados) == 0) return(NULL)
       
+      # Verificar si existe columna nivel
+      tiene_nivel <- "nivel" %in% names(datos_filtrados)
+      tiene_decimales <- "decimales" %in% names(datos_filtrados)
+      
+      # Columnas base para agrupar
+      cols_group <- c("year", "indicador_nombre", "unidad_corta", "unidad_larga", "fuente", "subcategoria", "orden_excel")
+      if (tiene_decimales) cols_group <- c(cols_group, "decimales")
+      if (tiene_nivel) cols_group <- c(cols_group, "nivel")
+      
       datos_cat <- datos_filtrados |>
-        dplyr::group_by(year, indicador_nombre, unidad_corta, unidad_larga, fuente, subcategoria, orden_excel) |>
-        dplyr::summarise(valor = dplyr::first(valor, na_rm = TRUE), .groups = "drop") |>
+        dplyr::group_by(dplyr::across(dplyr::all_of(cols_group))) |>
+        dplyr::summarise(valor = dplyr::first(valor), .groups = "drop") |>  # Sin na_rm para conservar NAs
         dplyr::ungroup()
       
       if (nrow(datos_cat) == 0) return(NULL)
       
+      # Columnas para indicadores únicos
+      cols_indicador <- c("indicador_nombre", "unidad_corta", "unidad_larga", "fuente", "subcategoria", "orden_excel")
+      if (tiene_decimales) cols_indicador <- c(cols_indicador, "decimales")
+      if (tiene_nivel) cols_indicador <- c(cols_indicador, "nivel")
+      
       indicadores_unicos <- datos_cat |>
-        dplyr::select(indicador_nombre, unidad_corta, unidad_larga, fuente, subcategoria, orden_excel) |>
+        dplyr::select(dplyr::all_of(cols_indicador)) |>
         dplyr::distinct()
       
       combinacion_completa <- tidyr::expand_grid(
@@ -2521,16 +2948,21 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       )
       
       datos_cat_completos <- combinacion_completa |>
-        dplyr::left_join(datos_cat, by = c("indicador_nombre", "unidad_corta", "unidad_larga", "fuente", "subcategoria", "orden_excel", "year"))
+        dplyr::left_join(datos_cat, by = c(cols_indicador, "year"))
+      
+      # Columnas para pivot
+      cols_id <- c("indicador_nombre", "unidad_corta", "unidad_larga", "fuente", "subcategoria", "orden_excel")
+      if (tiene_decimales) cols_id <- c(cols_id, "decimales")
+      if (tiene_nivel) cols_id <- c(cols_id, "nivel")
       
       datos_cat_pivot <- datos_cat_completos |>
         dplyr::arrange(orden_excel) |>  # Ordenar por orden del Excel
         tidyr::pivot_wider(
-          id_cols = c(indicador_nombre, unidad_corta, unidad_larga, fuente, subcategoria, orden_excel),
+          id_cols = dplyr::all_of(cols_id),
           names_from = year,
           values_from = valor,
           names_sort = TRUE,
-          values_fn = list(valor = ~mean(.x, na.rm = TRUE))
+          values_fn = list(valor = ~dplyr::first(.x))  # Sin na.rm para conservar NAs
         ) |>
         dplyr::arrange(orden_excel) |>  # Mantener orden del Excel
         dplyr::select(-orden_excel)  # Quitar columna orden_excel del resultado final
@@ -2841,20 +3273,6 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
         # Línea inferior de la tabla
         flextable::hline_bottom(part = "body", border = borde_verde)
       
-      # Aplicar sangría según el nivel (si existe)
-      # Nivel 1: sin sangría (0cm), Nivel 2: +0.5cm, Nivel 3: +1cm
-      if (!is.null(nivel_por_fila)) {
-        for (i in seq_along(nivel_por_fila)) {
-          niv <- nivel_por_fila[i]
-          if (!is.na(niv) && niv > 1) {
-            # Calcular padding izquierdo en puntos (0.5cm = ~14 puntos por cada nivel adicional)
-            padding_left <- (niv - 1) * 14
-            ft <- ft |>
-              flextable::padding(i = i, j = 1, padding.left = padding_left + 3, part = "body")
-          }
-        }
-      }
-      
       # Ajustar anchos de columna
       # Columna Indicador: 7cm (aproximadamente 2.76 pulgadas)
       # En landscape A4: ancho útil ≈ 27cm (29.7 - 2.7 de márgenes)
@@ -2876,9 +3294,42 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
           flextable::width(j = 2:n_cols, width = ancho_por_columna)
       }
       
-      # Padding
+      # Padding base
       ft <- ft |>
         flextable::padding(padding = 3, part = "all")
+      
+      # Aplicar sangría y color según el nivel (si existe)
+      # Nivel 1: sin sangría, negro
+      # Nivel 2: +0.5cm sangría, gray25 (#404040)
+      # Nivel 3+: +1cm sangría, gray50 (#808080)
+      if (!is.null(nivel_por_fila)) {
+        n_filas <- length(nivel_por_fila)
+        for (i in seq_len(n_filas)) {
+          niv <- nivel_por_fila[i]
+          if (is.na(niv)) niv <- 1L
+          
+          # Determinar color según nivel
+          color_texto <- if (niv == 1) {
+            "#000000"  # Negro
+          } else if (niv == 2) {
+            "#404040"  # gray25
+          } else {
+            "#808080"  # gray50
+          }
+          
+          # Aplicar color a toda la fila
+          ft <- ft |>
+            flextable::color(i = i, color = color_texto, part = "body")
+          
+          # Aplicar sangría solo a la primera columna (indicador)
+          if (niv > 1) {
+            # 0.5cm por cada nivel adicional = ~14 puntos
+            padding_izq <- (niv - 1) * 14 + 3  # +3 es el padding base
+            ft <- ft |>
+              flextable::padding(i = i, j = 1, padding.left = padding_izq, part = "body")
+          }
+        }
+      }
       
       # Mantener encabezado con el contenido (evitar que quede solo en página)
       ft <- ft |>
@@ -3555,13 +4006,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
             showcase = icon("database"),
             theme = "dark"
           )
-        )#,
-        # value_box(
-        #   title = "Total indicadores",
-        #   value = textOutput("n_total"),
-        #   showcase = icon("database"),
-        #   theme = "dark"
-        # )
+        )
       )
     ),
     
@@ -3852,11 +4297,7 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       bandera_actual(paste0("https://flagcdn.com/w160/", tolower(iso2), ".png"))
       
       # Obtener y guardar código ISO3
-      pais_iso3 <- if (iso2 %in% names(mapeo_iso2_iso3)) {
-        mapeo_iso2_iso3[iso2]
-      } else {
-        tryCatch(countrycode::countrycode(iso2, "iso2c", "iso3c"), error = function(e) NULL)
-      }
+      pais_iso3 <- iso2_a_iso3(iso2)
       iso3_actual(pais_iso3)
       
       # Verificar si el país es de la UE para Eurostat
@@ -3950,13 +4391,9 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
       
       if (length(match_idx) > 0) {
         iso3 <- tolower(paises$iso3c[match_idx])
-      } else if (iso2 %in% names(mapeo_iso2_iso3)) {
-        iso3 <- tolower(mapeo_iso2_iso3[iso2])
       } else {
-        iso3 <- tryCatch(
-          tolower(countrycode::countrycode(iso2, "iso2c", "iso3c")),
-          error = function(e) NULL
-        )
+        iso3_upper <- iso2_a_iso3(iso2)
+        iso3 <- if (!is.null(iso3_upper)) tolower(iso3_upper) else NULL
       }
       
       if (!is.null(iso3) && nchar(iso3) == 3) {
