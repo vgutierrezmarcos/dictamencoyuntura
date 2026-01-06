@@ -58,9 +58,12 @@ dictamencoyuntura_app <- function(output_dir = "output", ...) {
     "BIS",
     "imfapi",
     "shinyjs",
-    "OECD",
     "rdbnomics"
   )
+  
+  if(!"wtor" %in% installed.packages()[, "Package"]){
+    remotes::install_github("fabiansalazares/wtor")
+  }
   
   paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[, "Package"])]
   if (length(paquetes_faltantes) > 0) {

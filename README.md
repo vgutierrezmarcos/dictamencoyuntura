@@ -100,7 +100,7 @@ La aplicación integra datos de las siguientes fuentes internacionales:
 
 | Fuente | Descripción | Indicadores principales |
 |--------|-------------|-------------------------|
-| 🏦 **FMI** | Fondo Monetario Internacional | WEO, BOP, FSI, IFS, CPI |
+| 🏦 **FMI** | Fondo Monetario Internacional | WEO, BOP, FM, FSI, LS, CPI |
 | 🇪🇺 **Eurostat** | Oficina Estadística de la UE | Datos de países de la Unión Europea |
 | 🌎 **Banco Mundial** | World Development Indicators | Datos globales de desarrollo |
 | 🏪 **OMC** | Organización Mundial del Comercio | Comercio internacional |
@@ -137,7 +137,7 @@ La aplicación **instalará automáticamente** todos los paquetes necesarios la 
 shiny, bslib, shinyjs
 
 # Paquetes de descarga de datos
-wbstats, imfr, imfapi, eurostat, OECD, wtor, BIS, rdbnomics
+wbstats, imfr, imfapi, eurostat, wtor, BIS, rdbnomics
 
 # Paquetes de manipulación de datos
 dplyr, tidyr, purrr, lubridate, stringr
@@ -242,12 +242,9 @@ dictamencoyuntura_app(output_dir = "mis_exportaciones")
 - Barra de progreso mostrará el avance
 - Tiempo estimado: **30 segundos - 2 minutos** según fuentes seleccionadas
 
-#### 5️⃣ **Visualización derResultados**
+#### 5️⃣ **Visualización de resultados**
 
-La aplicación organiza los datos en pestañas:
-
-- **📊 Por categoría**: Datos agrupados por temas económicos
-- **📈 Resumen de fuentes**: Estadísticas de cobertura por fuente
+La aplicación organiza los datos en pestañas **agrupados por temas económicos 📊.**
 
 #### 6️⃣ **Exportación**
 
@@ -265,6 +262,23 @@ La aplicación organiza los datos en pestañas:
 Los archivos se guardan (por defecto en la carpeta `output/`) con nomenclatura:
 - Word: `Dictamen_ES_20260103.docx`
 - Excel: `Dictamen_ES_20260103.xlsx`
+
+
+#### 📋 Pestaña de Indicadores
+
+La aplicación incluye una pestaña dedicada a visualizar todos los indicadores configurados en el archivo `Indicadores_Dictamen_Economico.xlsx`. Esta funcionalidad permite:
+
+- **Consultar el catálogo completo** de indicadores disponibles para descarga
+- **Filtrar por fuente** (FMI, Banco Mundial, Eurostat, OMC, BIS)
+- **Filtrar por sección económica** (Sector real, Mercado laboral, etc.)
+- **Ver los metadatos** de cada indicador: código, nombre, unidad, fuente y base de datos
+
+Esta pestaña es especialmente útil para:
+- Verificar qué indicadores se descargarán antes de iniciar la descarga
+- Identificar la fuente original de cada dato
+- Comprobar las unidades de medida de cada variable
+
+> **Nota**: Solo se descargarán datos para los indicadores incluidos en el archivo Excel. Si necesitas añadir o modificar indicadores, edita el archivo `data/Indicadores_Dictamen_Economico.xlsx`.
 
 ---
 
@@ -381,6 +395,6 @@ Esta aplicación es una **herramienta de preparación no oficial** para el ejerc
 
 ---
 
-*Última actualización: 3 de enero de 2026*
+*Última actualización: 6 de enero de 2026*
 
 </div>
